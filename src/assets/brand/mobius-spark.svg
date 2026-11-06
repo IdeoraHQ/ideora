@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="iso_c3_grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="iso_c3_grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="iso_c3_grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#14213D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fully isolated standalone Möbius Spark symbol, pure transparent alpha -->
+  <g transform="translate(68, 68) scale(3.42)">
+    <!-- Loop wing 1: Inception -->
+    <path d="M35,22 C18,34 10,54 18,72 C26,90 48,96 68,85 L85,74 C96,68 102,55 98,42 C94,29 80,22 68,26 L48,34 C43,36 39,32 41,27 L43,22 C45,17 40,14 35,22 Z" fill="url(#iso_c3_grad1)"/>
+    <!-- Loop wing 2: Collaboration Fold -->
+    <path d="M75,88 C92,76 100,56 92,38 C84,20 62,14 42,25 L25,36 C14,42 8,55 12,68 C16,81 30,88 42,84 L62,76 C67,74 71,78 69,83 L67,88 C65,93 70,96 75,88 Z" fill="url(#iso_c3_grad2)"/>
+    <!-- Central Core Nexus Spark -->
+    <circle cx="55" cy="55" r="14" fill="#FFFFFF"/>
+    <circle cx="55" cy="55" r="8.5" fill="url(#iso_c3_grad3)"/>
+    <circle cx="55" cy="55" r="4" fill="#60A5FA"/>
+  </g>
+</svg>
