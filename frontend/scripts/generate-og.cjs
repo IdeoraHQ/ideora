@@ -137,3 +137,4 @@ const pngData = resvg.render();
 const pngBuffer = pngData.asPng();
 fs.writeFileSync(path.join(publicDir, 'og-image.png'), pngBuffer);
 console.log('SUCCESS: Generated public/og-image.svg and public/og-image.png (size:', pngBuffer.length, 'bytes)');
+
