@@ -54,6 +54,7 @@ export const IdeaDetailPage: React.FC = () => {
   const [idea, setIdea] = useState<Idea | null>(null);
   const [loading, setLoading] = useState(true);
   const [isUpvoted, setIsUpvoted] = useState(false);
+  const [isUpvoting, setIsUpvoting] = useState(false);
   const [comments, setComments] = useState<IdeaComment[]>([]);
   const [requests, setRequests] = useState<CollaborationRequest[]>([]);
 
@@ -130,8 +131,7 @@ export const IdeaDetailPage: React.FC = () => {
     );
   }
 
-  const isCreator = Boolean(profile && profile.id === idea.creator_id);
-  const [isUpvoting, setIsUpvoting] = useState(false);
+  const isCreator = Boolean(profile && idea && profile.id === idea.creator_id);
   const myExistingRequests = requests.filter(
     (r) => r.requester_id === profile?.id && r.status !== 'withdrawn'
   );
