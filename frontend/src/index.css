@@ -1,0 +1,147 @@
+/* Locally-hosted Outfit font - explicit weights + variable range for full compatibility across all mobile & desktop browsers */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('Outfit Light'), local('Outfit-Light'), local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Outfit Regular'), local('Outfit-Regular'), local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Outfit Medium'), local('Outfit-Medium'), local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Outfit SemiBold'), local('Outfit-SemiBold'), local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Outfit Bold'), local('Outfit-Bold'), local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+/* Variable font range support for modern browsers */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local('Outfit'),
+       url('/fonts/outfit-latin.woff2') format('woff2-variations'),
+       url('/fonts/outfit-latin.woff2') format('woff2'),
+       url('/fonts/outfit-regular.ttf') format('truetype');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-outfit);
+    letter-spacing: -0.01em;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-family: var(--font-outfit);
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Hierarchy defaults */
+  h1 {
+    font-weight: 300;
+    letter-spacing: -0.025em;
+  }
+
+  h2 {
+    font-weight: 300;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  button, input, select, textarea {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Efficient, mobile-friendly scrollbar hiding */
+  html, body, #root, .no-scrollbar, [class*="overflow-"] {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar,
+  [class*="overflow-"]::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+/* Custom scrollbar hiding utilities */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}

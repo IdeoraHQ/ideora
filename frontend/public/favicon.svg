@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="ideora-fav-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="ideora-fav-spark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#60A5FA"/>
+    </linearGradient>
+  </defs>
+  <!-- Brand rounded tile for crisp tab contrast -->
+  <rect width="64" height="64" rx="15" fill="url(#ideora-fav-bg)"/>
+  <!-- Official IDEORA Lightbulb Outline -->
+  <path
+    d="M32 9C22.6112 9 15 16.6112 15 26C15 31.5689 17.6843 36.5045 21.8697 39.6531C23.4163 40.8165 24.35 42.6466 24.35 44.5884V45.125C24.35 46.7819 25.6931 48.125 27.35 48.125H36.65C38.3069 48.125 39.65 46.7819 39.65 45.125V44.5884C39.65 42.6466 40.5837 40.8165 42.1303 39.6531C46.3157 36.5045 49 31.5689 49 26C49 16.6112 41.3888 9 32 9Z"
+    stroke="#FFFFFF"
+    stroke-width="3.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <!-- Base Cap -->
+  <path
+    d="M27 53.5C27 53.5 29 55 32 55C35 55 37 53.5 37 53.5"
+    stroke="#FFFFFF"
+    stroke-width="3.8"
+    stroke-linecap="round"
+  />
+  <!-- Lightning Bolt Spark Inside -->
+  <path
+    d="M33.5 17.5L25 29.5H32L30.5 39.5L39 27.5H32L33.5 17.5Z"
+    fill="url(#ideora-fav-spark)"
+    stroke="#93C5FD"
+    stroke-width="0.75"
+    stroke-linejoin="round"
+  />
+</svg>

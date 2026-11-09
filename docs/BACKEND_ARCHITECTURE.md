@@ -1,131 +1,74 @@
-# IDEORA — Backend Architecture & Data Contracts
+# IDEORA — Backend Architecture & Security Blueprint
 
-> **Audience**: Development Team & Frontend Co-Founder  
-> **Status**: Milestone 1 (Foundation, Schema, Authentication, RLS & Data Contracts)
-
----
-
-## 1. Architecture Overview
-
-IDEORA uses a modern serverless backend architecture built on **Supabase (PostgreSQL 15)**:
-
-- **Authentication**: Managed via Supabase Auth (`auth.users`), mapped 1:1 with `public.profiles`.
-- **Authorization**: Enforced at the database engine level using PostgreSQL **Row Level Security (RLS)**.
-- **Data Integrity**: Enforced through foreign keys with cascading deletes, `CHECK` constraints, triggers, and PostgreSQL enums.
-- **Client Access**: Strongly typed via `@supabase/supabase-js` using TypeScript database schemas.
+> **Audience**: Backend Engineers & Co-Founders  
+> **Status**: Production-Hardened (Milestone 3: Security, RLS Fortification, Rate Limiting & Anti-Tampering)  
 
 ---
 
-## 2. Database Schema Blueprint
+## 1. Security Architecture Overview
 
-### Enums
-- `user_role`: `'founder' | 'collaborator' | 'admin'`
-- `idea_status`: `'draft' | 'seeking_collaborators' | 'in_progress' | 'launched' | 'archived'`
-- `collaboration_type`: `'co_founder' | 'contributor' | 'advisor' | 'open_source'`
-- `request_status`: `'pending' | 'accepted' | 'declined' | 'withdrawn'`
-- `notification_type`: `'collaboration_request' | 'request_accepted' | 'request_declined' | 'new_comment' | 'idea_upvoted'`
+IDEORA enforces security at the **PostgreSQL database engine level** via Supabase. Rather than relying solely on client-side or application-level rules, the database itself enforces authentication, authorization, role integrity, counter protections, and rate limiting.
 
-### Tables & Relationships
-
-| Table | Description | Primary Key | Foreign Keys |
-| :--- | :--- | :--- | :--- |
-| `public.profiles` | User profile, bio, skills, socials | `id (UUID)` | `id -> auth.users.id` |
-| `public.ideas` | Core published or draft idea | `id (UUID)` | `creator_id -> profiles.id` |
-| `public.idea_roles_needed` | Skill roles and open seats for an idea | `id (UUID)` | `idea_id -> ideas.id` |
-| `public.collaboration_requests`| Applications by builders to join an idea | `id (UUID)` | `idea_id -> ideas.id`, `requester_id -> profiles.id`, `role_id -> idea_roles_needed.id` |
-| `public.idea_upvotes` | Community interest / upvote ledger | `(idea_id, user_id)` | `idea_id -> ideas.id`, `user_id -> profiles.id` |
-| `public.notifications` | Realtime alerts for users | `id (UUID)` | `recipient_id -> profiles.id`, `actor_id -> profiles.id`, `idea_id -> ideas.id` |
+### Core Security Layers:
+1. **Row Level Security (RLS)**: Enforced on 100% of tables. No table is accessible without explicit matching policies.
+2. **`search_path` Lockdown**: All `SECURITY DEFINER` functions have their search path explicitly fixed to `SET search_path = public, pg_temp` to prevent schema search path hijacking.
+3. **Privilege Escalation Defense**: Triggers prevent users from updating their own role column to `admin`.
+4. **Anti-Tampering Counter Triggers**: Direct client updates to metric fields (`upvotes_count`, `collaborators_count`) are rejected. Counts can only be modified through database-managed workflows.
+5. **State-Machine RLS**: Collaboration request status transitions are enforced by RLS. Applicants can only withdraw pending applications; idea creators can only accept or decline.
+6. **Rate Limiting Guard**: Built-in sliding window rate limiter prevents spam and brute-force actions on comments and requests.
+7. **Atomic RPC Operations**: Upvotes are processed via a server-side transaction function (`toggle_idea_upvote_secure`) to prevent race conditions.
 
 ---
 
-## 3. Row Level Security (RLS) Rules Matrix
+## 2. Security Migrations Catalog
 
-All tables have RLS enabled:
+### Migration 1: Foundation & Baseline RLS
+📁 `backend/supabase/migrations/20261102000001_initial_schema.sql`
+- Base tables: `profiles`, `ideas`, `idea_roles_needed`, `collaboration_requests`, `idea_upvotes`, `notifications`.
+- Automatic user profile provisioning trigger (`on_auth_user_created`).
+- Storage bucket RLS policies for avatars and attachments.
 
-- **`profiles`**:
-  - `SELECT`: Public.
-  - `INSERT / UPDATE`: Authenticated user matching `auth.uid() = id`.
-- **`ideas`**:
-  - `SELECT`: Public for published ideas (`status != 'draft'`); creators can view their own drafts.
-  - `INSERT`: Authenticated users (`creator_id = auth.uid()`).
-  - `UPDATE / DELETE`: Creator only (`creator_id = auth.uid()`).
-- **`idea_roles_needed`**:
-  - `SELECT`: Public.
-  - `INSERT / UPDATE / DELETE`: Idea creator only.
-- **`collaboration_requests`**:
-  - `SELECT`: Idea creator OR the applicant.
-  - `INSERT`: Authenticated users (cannot apply to own idea).
-  - `UPDATE`: Idea creator can accept/decline; applicant can withdraw.
-- **`idea_upvotes`**:
-  - `SELECT`: Public.
-  - `INSERT / DELETE`: Authenticated user (`user_id = auth.uid()`).
-- **`notifications`**:
-  - `SELECT / UPDATE`: Recipient only (`recipient_id = auth.uid()`).
+### Migration 2: Workflows & Automated Notifications
+📁 `backend/supabase/migrations/20261107000002_workflow_triggers_and_comments.sql`
+- Comments table with RLS.
+- Collaboration request workflow trigger:
+  - Notifies founders of incoming requests.
+  - Automatically updates `spots_filled` and `collaborators_count` when requests are accepted.
+  - Notifies applicants of decisions.
+- Comment notification trigger.
 
----
-
-## 4. Frontend Data Contracts (For Frontend Co-Founder)
-
-Import directly from `@/types` or `@/services/api`:
-
-### A. Submitting an Idea (`createIdea`)
-```typescript
-import { createIdea } from '@/services/api';
-import type { CreateIdeaPayload } from '@/types';
-
-const payload: CreateIdeaPayload = {
-  title: 'AI Pair Programmer for Open Source',
-  summary: 'A triage bot for GitHub issue queues.',
-  description: 'Detailed description of the architecture and mission...',
-  category: 'Developer Tools',
-  collaboration_type: 'co_founder',
-  tags: ['AI', 'OpenSource', 'TypeScript'],
-  roles_needed: [
-    {
-      role_title: 'Fullstack Engineer',
-      category: 'fullstack',
-      spots_available: 2,
-      description: 'Experience with React and Node.js',
-    },
-  ],
-};
-
-const { data, error } = await createIdea(payload);
-```
-
-### B. Querying Ideas (`fetchPublishedIdeas`)
-```typescript
-import { fetchPublishedIdeas } from '@/services/api';
-
-const { data, error } = await fetchPublishedIdeas({
-  category: 'Developer Tools',
-  search: 'AI',
-});
-```
-
-### C. Requesting Collaboration (`submitCollaborationRequest`)
-```typescript
-import { submitCollaborationRequest } from '@/services/api';
-
-const { data, error } = await submitCollaborationRequest({
-  idea_id: 'idea-uuid',
-  role_id: 'role-uuid',
-  message: "Hey! I'm a fullstack engineer interested in co-founding this with you.",
-});
-```
+### Migration 3: Security Hardening & Rate Limiting (Latest)
+📁 `backend/supabase/migrations/20261108000003_backend_security_hardening.sql`
+- **Search Path Hardening**:
+  - `handle_updated_at`
+  - `handle_new_user`
+  - `handle_upvote_counter`
+  - `handle_collaboration_request_workflow`
+  - `handle_new_comment_notification`
+- **Role Elevation Protection**:
+  - Trigger `trg_protect_profile_role` checks that only `service_role` can assign `admin` status.
+- **Metric Tampering Protection**:
+  - Trigger `trg_protect_idea_counters` prevents client updates from falsifying upvotes or collaborator counts.
+- **Collaboration RLS Hardening**:
+  - Requesters can only transition from `pending` -> `withdrawn`.
+  - Idea creators can only transition from `pending` -> `accepted` | `declined`.
+- **User Action Audit & Sliding Window Rate Limiting**:
+  - `public.user_action_audit` table.
+  - `check_rate_limit(p_user_id, p_action_type, p_limit, p_window_interval)` function.
+  - `trg_rate_limit_comments` enforces a ceiling of 10 comments per 5 minutes per user.
+- **Atomic Secure Upvote RPC**:
+  - `toggle_idea_upvote_secure(p_idea_id)` handles atomicity, existence checks, and returns the authoritative updated count.
 
 ---
 
-## 5. Applying Migrations
+## 3. How to Apply Security Migrations
 
-The migration file is located at:
-`supabase/migrations/20261102000001_initial_schema.sql`
-
-To apply to your cloud Supabase project:
-1. Open your project on [database.new](https://database.new) or [supabase.com/dashboard](https://supabase.com/dashboard).
+### Option A: Supabase Web Dashboard
+1. Open your project on [Supabase Dashboard](https://supabase.com/dashboard).
 2. Go to **SQL Editor**.
-3. Paste the contents of `20261102000001_initial_schema.sql` and run it.
-4. Or using Supabase CLI:
-   ```bash
-   npx supabase db push
-   ```
+3. Run `backend/supabase/migrations/20261108000003_backend_security_hardening.sql`.
+
+### Option B: Supabase CLI
+```bash
+npx supabase db push
+```
