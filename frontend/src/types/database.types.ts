@@ -15,7 +15,8 @@ export type NotificationType =
   | 'request_accepted'
   | 'request_declined'
   | 'new_comment'
-  | 'idea_upvoted';
+  | 'idea_upvoted'
+  | 'new_message';
 
 export interface Database {
   public: {
@@ -263,9 +264,149 @@ export interface Database {
         };
         Relationships: [];
       };
+      conversations: {
+        Row: {
+          id: string;
+          collaboration_request_id: string;
+          idea_id: string;
+          creator_id: string;
+          requester_id: string;
+          created_at: string;
+          updated_at: string;
+          last_message_at: string;
+        };
+        Insert: {
+          id?: string;
+          collaboration_request_id: string;
+          idea_id: string;
+          creator_id: string;
+          requester_id: string;
+          created_at?: string;
+          updated_at?: string;
+          last_message_at?: string;
+        };
+        Update: {
+          id?: string;
+          collaboration_request_id?: string;
+          idea_id?: string;
+          creator_id?: string;
+          requester_id?: string;
+          created_at?: string;
+          updated_at?: string;
+          last_message_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'conversations_idea_id_fkey';
+            columns: ['idea_id'];
+            isOneToOne: false;
+            referencedRelation: 'ideas';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'conversations_creator_id_fkey';
+            columns: ['creator_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'conversations_requester_id_fkey';
+            columns: ['requester_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'conversations_collaboration_request_id_fkey';
+            columns: ['collaboration_request_id'];
+            isOneToOne: true;
+            referencedRelation: 'collaboration_requests';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          sender_id: string;
+          body: string;
+          created_at: string;
+          updated_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          sender_id: string;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+          read_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          sender_id?: string;
+          body?: string;
+          created_at?: string;
+          updated_at?: string;
+          read_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'messages_conversation_id_fkey';
+            columns: ['conversation_id'];
+            isOneToOne: false;
+            referencedRelation: 'conversations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_or_create_conversation: {
+        Args: {
+          p_request_id: string;
+        };
+        Returns: Database['public']['Tables']['conversations']['Row'];
+      };
+      mark_conversation_messages_as_read: {
+        Args: {
+          p_conversation_id: string;
+        };
+        Returns: number;
+      };
+      respond_to_collaboration_request: {
+        Args: {
+          p_request_id: string;
+          p_decision: string;
+        };
+        Returns: {
+          success: boolean;
+          request_id: string;
+          status: string;
+        };
+      };
+      toggle_idea_upvote: {
+        Args: {
+          p_idea_id: string;
+        };
+        Returns: {
+          upvoted: boolean;
+          upvotes_count: number;
+        };
+      };
+    };
     Enums: {
       user_role: UserRole;
       idea_status: IdeaStatus;

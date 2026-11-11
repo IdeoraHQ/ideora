@@ -32,30 +32,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Initialize with cached profile for instant zero-latency render
-  const [profile, setProfile] = useState<UserProfile | null>(() => {
-    try {
-      const cached = localStorage.getItem('ideora_user_profile');
-      return cached ? JSON.parse(cached) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState<boolean>(() => {
-    return !localStorage.getItem('ideora_user_profile');
-  });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const saveProfile = useCallback((p: UserProfile | null) => {
     setProfile(p);
-    try {
-      if (p) {
-        localStorage.setItem('ideora_user_profile', JSON.stringify(p));
-      } else {
-        localStorage.removeItem('ideora_user_profile');
-      }
-    } catch {
-      // ignore storage errors
-    }
   }, []);
 
   const refreshProfile = useCallback(async () => {

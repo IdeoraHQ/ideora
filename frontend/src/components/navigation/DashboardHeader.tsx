@@ -3,12 +3,15 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Search,
   Bell,
+  MessageSquare,
   CheckCheck,
   User as UserIcon,
   LogOut,
   Sparkles,
   ExternalLink,
   PlusCircle,
+  X,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -22,11 +25,13 @@ import { cn } from '@/utils/cn';
 interface DashboardHeaderProps {
   title?: string;
   breadcrumb?: string;
+  unreadMessagesCount?: number;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   title,
   breadcrumb = 'Workspace',
+  unreadMessagesCount = 0,
 }) => {
   const { profile, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
@@ -75,7 +80,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       );
     }
     setIsNotifOpen(false);
-    if (notif.idea?.slug) {
+    if (notif.type === 'new_message') {
+      navigate('/messages');
+    } else if (notif.type === 'collaboration_request') {
+      navigate('/dashboard?tab=incoming');
+    } else if (notif.idea?.slug) {
       navigate(`/ideas/${notif.idea.slug}`);
     } else {
       navigate('/dashboard');
@@ -157,6 +166,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <span>New Idea</span>
         </Link>
 
+        {/* Direct Messages Link */}
+        <Link
+          to="/messages"
+          className="relative rounded-xl p-2 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
+          aria-label="Direct Messages"
+          title="Direct Messages"
+        >
+          <MessageSquare className="h-5 w-5" />
+          {unreadMessagesCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-royal px-1 text-[9px] font-bold text-white shadow-sm">
+              {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+            </span>
+          )}
+        </Link>
+
         {/* Notifications Dropdown */}
         <div className="relative" ref={notifRef}>
           <button
@@ -174,28 +198,54 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </button>
 
           {isNotifOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-surface-border bg-surface-white shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 bg-surface-soft">
-                <span className="text-xs font-semibold text-typography-navy uppercase tracking-wider">
-                  Notifications ({unreadCount} unread)
-                </span>
-                {unreadCount > 0 && (
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 rounded-2xl border border-surface-border bg-surface-white shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 bg-surface-soft/90 backdrop-blur-sm">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs font-bold text-typography-navy tracking-wide uppercase">
+                    Notifications
+                  </span>
+                  {unreadCount > 0 ? (
+                    <span className="rounded-full bg-brand-royal/10 text-brand-royal px-2 py-0.5 text-[10px] font-bold">
+                      {unreadCount} unread
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-typography-muted font-medium">
+                      All caught up
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-royal hover:text-brand-deep transition-colors"
+                    >
+                      <CheckCheck className="h-3 w-3" />
+                      Mark all read
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={handleMarkAllRead}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-royal hover:text-brand-deep"
+                    onClick={() => setIsNotifOpen(false)}
+                    className="rounded-lg p-1 text-typography-muted hover:text-typography-navy hover:bg-surface-light transition-colors"
+                    aria-label="Close notifications"
                   >
-                    <CheckCheck className="h-3 w-3" />
-                    Mark all read
+                    <X className="h-4 w-4" />
                   </button>
-                )}
+                </div>
               </div>
 
+              {/* Body */}
               <div className="max-h-80 overflow-y-auto divide-y divide-surface-border">
                 {notifications.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-typography-muted">
+                  <div className="p-8 text-center text-xs text-typography-muted">
                     <Sparkles className="mx-auto h-6 w-6 text-typography-muted mb-2 opacity-60" />
-                    No notifications yet.
+                    <p className="font-medium text-typography-slate">No notifications yet</p>
+                    <p className="text-[11px] text-typography-muted mt-0.5">
+                      Updates regarding collaboration and ideas will appear here.
+                    </p>
                   </div>
                 ) : (
                   notifications.map((n) => (
@@ -204,7 +254,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                       type="button"
                       onClick={() => handleMarkRead(n)}
                       className={cn(
-                        'w-full text-left px-4 py-3 transition-colors hover:bg-surface-light',
+                        'w-full text-left px-4 py-3.5 transition-colors hover:bg-surface-light',
                         !n.is_read ? 'bg-brand-ice/40' : 'bg-surface-white'
                       )}
                     >
@@ -219,12 +269,29 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                       <p className="mt-1 text-xs text-typography-slate line-clamp-2 leading-relaxed">
                         {n.content}
                       </p>
-                      <span className="mt-1 block text-[10px] text-typography-muted">
-                        {new Date(n.created_at).toLocaleDateString()}
+                      <span className="mt-1.5 block text-[10px] text-typography-muted">
+                        {new Date(n.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
                       </span>
                     </button>
                   ))
                 )}
+              </div>
+
+              {/* Prominent Footer Button to Notifications Page */}
+              <div className="border-t border-surface-border p-3 bg-surface-soft/80">
+                <Link
+                  to="/notifications"
+                  onClick={() => setIsNotifOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-royal py-2.5 px-4 text-xs font-semibold text-white shadow-sm hover:bg-brand-deep active:scale-[0.98] transition-all"
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>Go to Notifications Page</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
           )}

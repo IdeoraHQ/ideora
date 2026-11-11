@@ -11,6 +11,8 @@ import {
   LogOut,
   CheckCheck,
   Sparkles,
+  X,
+  ArrowRight,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
 import { useSupabaseStatus } from '@/hooks/useSupabaseStatus';
@@ -205,27 +207,54 @@ export const Navbar: React.FC = () => {
                 </button>
 
                 {notifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-surface-border bg-surface-white shadow-xl z-50 overflow-hidden">
-                    <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 bg-surface-soft">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-typography-navy">
-                        Notifications ({unreadCount} unread)
-                      </span>
-                      {unreadCount > 0 && (
+                  <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 rounded-2xl border border-surface-border bg-surface-white shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 bg-surface-soft/90 backdrop-blur-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-bold uppercase tracking-wider text-typography-navy">
+                          Notifications
+                        </span>
+                        {unreadCount > 0 ? (
+                          <span className="rounded-full bg-brand-royal/10 text-brand-royal px-2 py-0.5 text-[10px] font-bold">
+                            {unreadCount} unread
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-typography-muted font-medium">
+                            All caught up
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleMarkAllRead}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-royal hover:text-brand-deep transition-colors"
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            Mark all read
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={handleMarkAllRead}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-royal hover:text-brand-deep"
+                          onClick={() => setNotifOpen(false)}
+                          className="rounded-lg p-1 text-typography-muted hover:text-typography-navy hover:bg-surface-light transition-colors"
+                          aria-label="Close notifications"
                         >
-                          <CheckCheck className="h-3.5 w-3.5" />
-                          Mark all read
+                          <X className="h-4 w-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
+
+                    {/* Body */}
                     <div className="max-h-80 overflow-y-auto divide-y divide-surface-border">
                       {notifications.length === 0 ? (
-                        <div className="p-6 text-center text-xs text-typography-slate">
-                          <Sparkles className="mx-auto h-6 w-6 text-typography-muted mb-2" />
-                          No notifications yet.
+                        <div className="p-8 text-center text-xs text-typography-slate">
+                          <Sparkles className="mx-auto h-6 w-6 text-typography-muted mb-2 opacity-60" />
+                          <p className="font-medium text-typography-slate">No notifications yet</p>
+                          <p className="text-[11px] text-typography-muted mt-0.5">
+                            Updates regarding collaboration and ideas will appear here.
+                          </p>
                         </div>
                       ) : (
                         notifications.map((n) => (
@@ -233,24 +262,44 @@ export const Navbar: React.FC = () => {
                             key={n.id}
                             type="button"
                             onClick={() => handleMarkRead(n)}
-                            className={`w-full text-left px-4 py-3 transition-colors hover:bg-surface-light ${
-                              !n.is_read ? 'bg-brand-ice/40' : ''
+                            className={`w-full text-left px-4 py-3.5 transition-colors hover:bg-surface-light ${
+                              !n.is_read ? 'bg-brand-ice/40' : 'bg-surface-white'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-xs font-bold text-typography-navy">
+                              <span className="text-xs font-bold text-typography-navy truncate">
                                 {n.title}
                               </span>
                               {!n.is_read && (
                                 <span className="h-2 w-2 rounded-full bg-brand-royal shrink-0 mt-1" />
                               )}
                             </div>
-                            <p className="mt-1 text-xs text-typography-slate line-clamp-2">
+                            <p className="mt-1 text-xs text-typography-slate line-clamp-2 leading-relaxed">
                               {n.content}
                             </p>
+                            <span className="mt-1.5 block text-[10px] text-typography-muted">
+                              {new Date(n.created_at).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
                           </button>
                         ))
                       )}
+                    </div>
+
+                    {/* Prominent Footer Button to Notifications Page */}
+                    <div className="border-t border-surface-border p-3 bg-surface-soft/80">
+                      <Link
+                        to="/notifications"
+                        onClick={() => setNotifOpen(false)}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-royal py-2.5 px-4 text-xs font-semibold text-white shadow-sm hover:bg-brand-deep active:scale-[0.98] transition-all"
+                      >
+                        <Bell className="h-3.5 w-3.5" />
+                        <span>Go to Notifications Page</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </div>
                   </div>
                 )}

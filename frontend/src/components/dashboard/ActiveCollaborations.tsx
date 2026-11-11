@@ -1,16 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, ArrowUpRight, FolderGit2 } from 'lucide-react';
+import { Users, Clock, ArrowUpRight, FolderGit2, MessageSquare } from 'lucide-react';
 import type { CollaborationRequest } from '@/types';
 
 interface ActiveCollaborationsProps {
   collaborations: CollaborationRequest[];
   loading?: boolean;
+  onMessage?: (id: string) => void;
 }
 
 export const ActiveCollaborations: React.FC<ActiveCollaborationsProps> = ({
   collaborations,
   loading,
+  onMessage,
 }) => {
   const activeCollabs = collaborations.filter((c) => c.status === 'accepted');
 
@@ -82,13 +84,26 @@ export const ActiveCollaborations: React.FC<ActiveCollaborationsProps> = ({
                 </div>
               </div>
 
-              <Link
-                to={`/ideas/${collab.idea?.slug || ''}`}
-                className="shrink-0 p-2 rounded-lg text-typography-muted hover:text-brand-royal hover:bg-surface-light transition-colors"
-                title="Open Idea Workspace"
-              >
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {onMessage && (
+                  <button
+                    type="button"
+                    onClick={() => onMessage(collab.id)}
+                    className="inline-flex items-center gap-1 rounded-xl border border-brand-royal/30 bg-brand-ice px-2.5 py-1 text-xs font-semibold text-brand-royal hover:bg-brand-pale/50 transition-colors"
+                    title="Direct message initiative founder"
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    <span>Message</span>
+                  </button>
+                )}
+                <Link
+                  to={`/ideas/${collab.idea?.slug || ''}`}
+                  className="p-1.5 rounded-lg text-typography-muted hover:text-brand-royal hover:bg-surface-light transition-colors"
+                  title="Open Idea Workspace"
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           ))}
         </div>

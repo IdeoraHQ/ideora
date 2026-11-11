@@ -1,20 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Inbox, CheckCircle2, XCircle, ArrowUpRight } from 'lucide-react';
+import { Inbox, CheckCircle2, XCircle, ArrowUpRight, RotateCw, MessageSquare } from 'lucide-react';
 import type { CollaborationRequest } from '@/types';
 
 interface CollaborationRequestsProps {
   requests: CollaborationRequest[];
   loading?: boolean;
+  actionLoadingId?: string | null;
   onAccept?: (id: string) => Promise<void>;
   onDecline?: (id: string) => Promise<void>;
+  onMessage?: (id: string) => void;
 }
 
 export const CollaborationRequests: React.FC<CollaborationRequestsProps> = ({
   requests,
   loading,
+  actionLoadingId,
   onAccept,
   onDecline,
+  onMessage,
 }) => {
   const pendingRequests = requests.filter((r) => r.status === 'pending');
 
@@ -86,30 +90,46 @@ export const CollaborationRequests: React.FC<CollaborationRequestsProps> = ({
                 {req.message}
               </p>
 
-              {(onAccept || onDecline) && (
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  {onDecline && (
-                    <button
-                      type="button"
-                      onClick={() => onDecline(req.id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-surface-border bg-surface-white px-2.5 py-1 text-[11px] font-medium text-typography-slate hover:bg-functional-error-light hover:text-functional-error transition-colors"
-                    >
-                      <XCircle className="h-3 w-3" />
-                      Decline
-                    </button>
-                  )}
-                  {onAccept && (
-                    <button
-                      type="button"
-                      onClick={() => onAccept(req.id)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-functional-success px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
-                    >
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                {onMessage && (
+                  <button
+                    type="button"
+                    disabled={actionLoadingId === req.id}
+                    onClick={() => onMessage(req.id)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-brand-royal/30 bg-brand-ice px-2.5 py-1 text-[11px] font-semibold text-brand-royal hover:bg-brand-pale/50 transition-colors disabled:opacity-50"
+                    title="Direct message this applicant"
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    Message
+                  </button>
+                )}
+                {onDecline && (
+                  <button
+                    type="button"
+                    disabled={actionLoadingId === req.id}
+                    onClick={() => onDecline(req.id)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-surface-border bg-surface-white px-2.5 py-1 text-[11px] font-medium text-typography-slate hover:bg-functional-error-light hover:text-functional-error transition-colors disabled:opacity-50"
+                  >
+                    <XCircle className="h-3 w-3" />
+                    Decline
+                  </button>
+                )}
+                {onAccept && (
+                  <button
+                    type="button"
+                    disabled={actionLoadingId === req.id}
+                    onClick={() => onAccept(req.id)}
+                    className="inline-flex items-center gap-1 rounded-lg bg-functional-success px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {actionLoadingId === req.id ? (
+                      <RotateCw className="h-3 w-3 animate-spin" />
+                    ) : (
                       <CheckCircle2 className="h-3 w-3" />
-                      Accept
-                    </button>
-                  )}
-                </div>
-              )}
+                    )}
+                    {actionLoadingId === req.id ? 'Accepting...' : 'Accept'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

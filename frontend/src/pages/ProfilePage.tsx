@@ -12,7 +12,6 @@ import {
   AlertCircle,
   ArrowLeft,
   Share2,
-  ShieldCheck,
   Users,
   Sparkles,
   Check,
@@ -318,11 +317,6 @@ export const ProfilePage: React.FC = () => {
                       <Sparkles className="h-3 w-3" />
                       {viewedProfile.role}
                     </span>
-
-                    <span className="inline-flex items-center gap-1 rounded-full bg-functional-success-light border border-functional-success/20 px-2.5 py-0.5 text-[11px] font-semibold text-functional-success">
-                      <ShieldCheck className="h-3 w-3" />
-                      Verified Builder
-                    </span>
                   </div>
 
                   <p className="text-sm text-typography-slate font-medium break-all">
@@ -447,7 +441,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* 4. Builder Impact Metrics */}
-          <div className="mt-8 pt-6 border-t border-surface-border grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-8 pt-6 border-t border-surface-border grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-surface-border bg-surface-soft p-4 text-center">
               <span className="block text-2xl font-bold text-typography-navy">
                 {userIdeas.length}
@@ -459,10 +453,10 @@ export const ProfilePage: React.FC = () => {
 
             <div className="rounded-2xl border border-surface-border bg-surface-soft p-4 text-center">
               <span className="block text-2xl font-bold text-brand-royal">
-                {totalUpvotes}
+                {totalUpvotes ?? 0}
               </span>
               <span className="mt-0.5 block text-xs font-medium text-typography-slate">
-                Community Upvotes
+                Community Upvotes & Likes
               </span>
             </div>
 
@@ -472,15 +466,6 @@ export const ProfilePage: React.FC = () => {
               </span>
               <span className="mt-0.5 block text-xs font-medium text-typography-slate">
                 Open Roles Offered
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-surface-border bg-surface-soft p-4 text-center">
-              <span className="block text-2xl font-bold text-functional-success">
-                100%
-              </span>
-              <span className="mt-0.5 block text-xs font-medium text-typography-slate">
-                Commitment Score
               </span>
             </div>
           </div>

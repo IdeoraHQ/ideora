@@ -261,7 +261,7 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
 
         {/* Right Action Buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Interactive Upvote Pill */}
+          {/* Interactive Upvote / Like Pill */}
           <button
             type="button"
             disabled={isUpvoting}
@@ -273,10 +273,11 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
                 : 'bg-surface-soft text-typography-slate hover:bg-brand-ice hover:text-brand-royal border border-surface-border',
               isUpvoting && 'opacity-60 cursor-not-allowed'
             )}
-            title={isUpvoted ? 'You have upvoted this idea' : 'Upvote this idea'}
+            title={isUpvoted ? 'You have upvoted / liked this idea' : 'Upvote / Like this idea'}
+            aria-label={`Upvotes and likes: ${idea.upvotes_count ?? 0}`}
           >
             <ThumbsUp className={cn('h-3.5 w-3.5', isUpvoted && 'fill-white')} />
-            <span>{idea.upvotes_count}</span>
+            <span className="font-semibold">{idea.upvotes_count ?? 0}</span>
           </button>
 
           {/* View Workspace / Details Button */}

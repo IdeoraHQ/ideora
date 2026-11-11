@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Lightbulb,
   Inbox,
@@ -11,6 +11,12 @@ import {
   ArrowUpRight,
   Clock,
   Sparkles,
+  ThumbsUp,
+  Users,
+  RotateCw,
+  AlertCircle,
+  MessageSquare,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -21,6 +27,9 @@ import {
   updateRequestStatus,
   updateIdeaStatus,
   deleteIdea,
+  fetchUserUpvotedIdeaIds,
+  toggleIdeaUpvote,
+  getOrCreateConversation,
 } from '@/services/api';
 import type { Idea, CollaborationRequest, IdeaStatus } from '@/types';
 import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
@@ -43,6 +52,7 @@ const ideaStatusOptions = [
 export const DashboardPage: React.FC = () => {
   const { profile, isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Tab state can be read/controlled via URL search parameter (e.g. ?tab=ideas or ?tab=incoming)
   const currentTab = (searchParams.get('tab') as 'overview' | 'ideas' | 'incoming' | 'sent') || 'overview';
@@ -51,7 +61,10 @@ export const DashboardPage: React.FC = () => {
   const [incomingRequests, setIncomingRequests] = useState<CollaborationRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedIdeas, setRecommendedIdeas] = useState<Idea[]>([]);
+  const [upvotedIds, setUpvotedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const loadWorkspace = useCallback(async () => {
     if (!profile) {
@@ -60,16 +73,18 @@ export const DashboardPage: React.FC = () => {
     }
     setLoading(true);
 
-    const [ideasRes, incomingRes, sentRes, recRes] = await Promise.all([
+    const [ideasRes, incomingRes, sentRes, recRes, upvotedRes] = await Promise.all([
       fetchUserIdeas(profile.id),
       fetchFounderIncomingRequests(profile.id),
       fetchUserSentRequests(profile.id),
       fetchPublishedIdeas({ sortBy: 'trending' }),
+      fetchUserUpvotedIdeaIds(),
     ]);
 
     if (ideasRes.data) setMyIdeas(ideasRes.data);
     if (incomingRes.data) setIncomingRequests(incomingRes.data);
     if (sentRes.data) setSentRequests(sentRes.data);
+    setUpvotedIds(upvotedRes || []);
     if (recRes.data) {
       // Recommend ideas not created by current user
       const filtered = recRes.data.filter((i) => i.creator_id !== profile.id);
@@ -81,6 +96,30 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     void loadWorkspace();
   }, [loadWorkspace]);
+
+  const handleToggleUpvote = async (ideaId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) return;
+    const { upvoted, upvotesCount, error } = await toggleIdeaUpvote(ideaId);
+    if (!error) {
+      setUpvotedIds((prev) =>
+        upvoted ? [...prev, ideaId] : prev.filter((id) => id !== ideaId)
+      );
+      setRecommendedIdeas((prev) =>
+        prev.map((item) =>
+          item.id === ideaId
+            ? {
+                ...item,
+                upvotes_count:
+                  upvotesCount !== undefined
+                    ? upvotesCount
+                    : Math.max(0, (item.upvotes_count ?? 0) + (upvoted ? 1 : -1)),
+              }
+            : item
+        )
+      );
+    }
+  };
 
   // If unauthenticated, render a clean sign-in prompt
   if (!isAuthenticated || !profile) {
@@ -112,13 +151,24 @@ export const DashboardPage: React.FC = () => {
   const activeCollaborationsCount = sentRequests.filter((r) => r.status === 'accepted').length;
   const pendingIncomingCount = incomingRequests.filter((r) => r.status === 'pending').length;
   const activeProjectsCount = myIdeas.filter((i) => i.status === 'in_progress' || i.status === 'launched').length;
+  const totalUpvotesCount = myIdeas.reduce((sum, i) => sum + (i.upvotes_count || 0), 0);
 
   const handleRequestAction = async (
     requestId: string,
     status: 'accepted' | 'declined' | 'withdrawn'
   ) => {
-    await updateRequestStatus(requestId, status);
-    await loadWorkspace();
+    setActionLoadingId(requestId);
+    setActionError(null);
+    try {
+      const { error } = await updateRequestStatus(requestId, status);
+      if (error) {
+        setActionError(error.message || 'Failed to update request. Please try again.');
+      } else {
+        await loadWorkspace();
+      }
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const handleStatusChange = async (ideaId: string, status: IdeaStatus) => {
@@ -133,6 +183,21 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleOpenConversation = async (requestId: string) => {
+    setActionLoadingId(requestId);
+    setActionError(null);
+    try {
+      const { data, error } = await getOrCreateConversation(requestId);
+      if (error) {
+        setActionError(error.message || 'Failed to open conversation.');
+      } else if (data) {
+        navigate(`/messages?id=${data.id}`);
+      }
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* 1. Personalized Welcome Section */}
@@ -144,6 +209,7 @@ export const DashboardPage: React.FC = () => {
         collaborationsCount={activeCollaborationsCount}
         pendingRequestsCount={pendingIncomingCount}
         activeProjectsCount={activeProjectsCount}
+        totalUpvotesCount={totalUpvotesCount}
       />
 
       {/* Sub-view Navigation Tabs (Overview vs Deep Workspace Managers) */}
@@ -200,6 +266,13 @@ export const DashboardPage: React.FC = () => {
           <Send className="h-3.5 w-3.5" />
           Sent Applications ({sentRequests.length})
         </button>
+        <Link
+          to="/notifications"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl whitespace-nowrap text-typography-slate hover:text-typography-navy hover:bg-surface-white transition-colors"
+        >
+          <Bell className="h-3.5 w-3.5" />
+          Notifications
+        </Link>
       </div>
 
       {/* Main Viewport Content Switching */}
@@ -212,7 +285,11 @@ export const DashboardPage: React.FC = () => {
             <RecentIdeas ideas={myIdeas} loading={loading} />
 
             {/* Your Active Collaborations */}
-            <ActiveCollaborations collaborations={sentRequests} loading={loading} />
+            <ActiveCollaborations
+              collaborations={sentRequests}
+              loading={loading}
+              onMessage={handleOpenConversation}
+            />
 
             {/* Recommended Ideas Section */}
             {recommendedIdeas.length > 0 && (
@@ -238,7 +315,12 @@ export const DashboardPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {recommendedIdeas.map((idea) => (
-                    <IdeaCard key={idea.id} idea={idea} />
+                    <IdeaCard
+                      key={idea.id}
+                      idea={idea}
+                      isUpvoted={upvotedIds.includes(idea.id)}
+                      onToggleUpvote={handleToggleUpvote}
+                    />
                   ))}
                 </div>
               </div>
@@ -251,8 +333,10 @@ export const DashboardPage: React.FC = () => {
             <CollaborationRequests
               requests={incomingRequests}
               loading={loading}
+              actionLoadingId={actionLoadingId}
               onAccept={(id) => handleRequestAction(id, 'accepted')}
               onDecline={(id) => handleRequestAction(id, 'declined')}
+              onMessage={handleOpenConversation}
             />
 
             {/* Quick Actions */}
@@ -309,12 +393,26 @@ export const DashboardPage: React.FC = () => {
                   className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-surface-border bg-surface-white p-5 shadow-sm hover:border-brand-light/70 transition-all"
                 >
                   <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="rounded-md bg-brand-ice px-2 py-0.5 text-[10px] font-semibold text-brand-royal">
                         {idea.category}
                       </span>
                       <span className="rounded-full bg-surface-light px-2.5 py-0.5 text-[10px] font-medium text-typography-muted capitalize">
                         {idea.status.replace(/_/g, ' ')}
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1 rounded-md bg-surface-soft border border-surface-border px-2 py-0.5 text-[10px] font-semibold text-typography-navy"
+                        title="Community Upvotes & Likes"
+                      >
+                        <ThumbsUp className="h-3 w-3 text-brand-royal" />
+                        <span>{idea.upvotes_count ?? 0}</span>
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1 rounded-md bg-surface-soft border border-surface-border px-2 py-0.5 text-[10px] font-semibold text-typography-navy"
+                        title="Active Collaborators"
+                      >
+                        <Users className="h-3 w-3 text-functional-success" />
+                        <span>{idea.collaborators_count ?? 0}</span>
                       </span>
                     </div>
                     <Link
@@ -370,6 +468,13 @@ export const DashboardPage: React.FC = () => {
               Review and accept applications from builders wanting to contribute to your ideas.
             </p>
           </div>
+
+          {actionError && (
+            <div className="flex items-center gap-2 rounded-xl bg-functional-error-light border border-functional-error/20 p-3.5 text-xs text-functional-error">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{actionError}</span>
+            </div>
+          )}
 
           {loading ? (
             <div className="py-12 text-center text-xs text-typography-muted">
@@ -433,26 +538,47 @@ export const DashboardPage: React.FC = () => {
                     {req.message}
                   </p>
 
-                  {req.status === 'pending' && (
-                    <div className="flex items-center justify-end gap-2 pt-1">
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    {(req.status === 'pending' || req.status === 'accepted') && (
                       <button
                         type="button"
-                        onClick={() => handleRequestAction(req.id, 'declined')}
-                        className="inline-flex items-center gap-1 rounded-xl border border-surface-border bg-surface-soft px-3.5 py-1.5 text-xs font-medium text-typography-slate hover:bg-functional-error-light hover:text-functional-error transition-colors"
+                        disabled={actionLoadingId === req.id}
+                        onClick={() => handleOpenConversation(req.id)}
+                        className="inline-flex items-center gap-1 rounded-xl border border-brand-royal/30 bg-brand-ice px-3.5 py-1.5 text-xs font-semibold text-brand-royal hover:bg-brand-pale/50 transition-colors disabled:opacity-50"
+                        title="Direct message this applicant"
                       >
-                        <XCircle className="h-3.5 w-3.5" />
-                        Decline
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        <span>Message</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRequestAction(req.id, 'accepted')}
-                        className="inline-flex items-center gap-1 rounded-xl bg-functional-success px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:opacity-95 transition-opacity"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Accept Collaborator
-                      </button>
-                    </div>
-                  )}
+                    )}
+
+                    {req.status === 'pending' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={actionLoadingId === req.id}
+                          onClick={() => handleRequestAction(req.id, 'declined')}
+                          className="inline-flex items-center gap-1 rounded-xl border border-surface-border bg-surface-soft px-3.5 py-1.5 text-xs font-medium text-typography-slate hover:bg-functional-error-light hover:text-functional-error transition-colors disabled:opacity-50"
+                        >
+                          <XCircle className="h-3.5 w-3.5" />
+                          Decline
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionLoadingId === req.id}
+                          onClick={() => handleRequestAction(req.id, 'accepted')}
+                          className="inline-flex items-center gap-1 rounded-xl bg-functional-success px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:opacity-95 transition-opacity disabled:opacity-50"
+                        >
+                          {actionLoadingId === req.id ? (
+                            <RotateCw className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          )}
+                          {actionLoadingId === req.id ? 'Accepting...' : 'Accept Collaborator'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -528,6 +654,19 @@ export const DashboardPage: React.FC = () => {
                         <Clock className="h-3 w-3" />
                         {req.status}
                       </span>
+
+                      {(req.status === 'pending' || req.status === 'accepted') && (
+                        <button
+                          type="button"
+                          disabled={actionLoadingId === req.id}
+                          onClick={() => handleOpenConversation(req.id)}
+                          className="inline-flex items-center gap-1 rounded-xl border border-brand-royal/30 bg-brand-ice px-3 py-1 text-xs font-semibold text-brand-royal hover:bg-brand-pale/50 transition-colors disabled:opacity-50"
+                          title="Direct message the idea founder"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>Message</span>
+                        </button>
+                      )}
 
                       {req.status === 'pending' && (
                         <button

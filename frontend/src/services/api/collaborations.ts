@@ -132,27 +132,49 @@ export async function fetchFounderIncomingRequests(
 
 /**
  * Update request status (accept, decline, withdraw)
+ * Tries the atomic respond_to_collaboration_request RPC first,
+ * falling back to direct update with robust error handling.
  */
 export async function updateRequestStatus(
   requestId: string,
   status: RequestStatus
 ): Promise<{ data: CollabRequestRow | null; error: Error | null }> {
   try {
+    // 1. Try atomic database RPC
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      'respond_to_collaboration_request',
+      {
+        p_request_id: requestId,
+        p_decision: status,
+      }
+    );
+
+    if (!rpcError && rpcData?.success) {
+      return {
+        data: {
+          id: requestId,
+          status,
+        } as unknown as CollabRequestRow,
+        error: null,
+      };
+    }
+
+    // 2. If RPC does not exist (PGRST202) or threw, fall back to direct update
     const { data, error } = await supabase
       .from('collaboration_requests')
       .update({ status })
       .eq('id', requestId)
-      .select(`
-        *,
-        requester:profiles(*),
-        idea:ideas(*),
-        role:idea_roles_needed(*)
-      `)
+      .select('*')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[IDEORA] updateRequestStatus error:', error);
+      throw error;
+    }
+
     return { data: data as unknown as CollabRequestRow, error: null };
   } catch (err) {
+    console.error('[IDEORA] updateRequestStatus failed:', err);
     return { data: null, error: err as Error };
   }
 }

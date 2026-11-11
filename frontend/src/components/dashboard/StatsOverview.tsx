@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightbulb, Users, Inbox, FolderGit2 } from 'lucide-react';
+import { Lightbulb, Users, Inbox, FolderGit2, ThumbsUp } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 interface StatsOverviewProps {
@@ -7,6 +7,7 @@ interface StatsOverviewProps {
   collaborationsCount: number;
   pendingRequestsCount: number;
   activeProjectsCount: number;
+  totalUpvotesCount?: number;
 }
 
 export const StatsOverview: React.FC<StatsOverviewProps> = ({
@@ -14,6 +15,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
   collaborationsCount,
   pendingRequestsCount,
   activeProjectsCount,
+  totalUpvotesCount,
 }) => {
   const stats = [
     {
@@ -45,10 +47,28 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
       iconColor: 'text-brand-deep',
       iconBg: 'bg-surface-light',
     },
+    ...(totalUpvotesCount !== undefined
+      ? [
+          {
+            label: 'Total Upvotes & Likes',
+            value: totalUpvotesCount,
+            icon: ThumbsUp,
+            iconColor: 'text-brand-royal',
+            iconBg: 'bg-brand-ice',
+          },
+        ]
+      : []),
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div
+      className={cn(
+        'grid gap-3 sm:gap-4',
+        totalUpvotesCount !== undefined
+          ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+          : 'grid-cols-2 lg:grid-cols-4'
+      )}
+    >
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

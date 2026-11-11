@@ -80,13 +80,13 @@ export const RecentIdeas: React.FC<RecentIdeasProps> = ({ ideas, loading }) => {
                 </p>
 
                 <div className="flex items-center gap-3 mt-2 text-[11px] text-typography-muted">
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1" title="Active Collaborators">
                     <Users className="h-3 w-3" />
-                    {idea.collaborators_count}
+                    <span>{idea.collaborators_count ?? 0}</span>
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1" title="Community Upvotes & Likes">
                     <ThumbsUp className="h-3 w-3" />
-                    {idea.upvotes_count}
+                    <span>{idea.upvotes_count ?? 0}</span>
                   </span>
                   <span>&bull;</span>
                   <span>{new Date(idea.created_at).toLocaleDateString()}</span>

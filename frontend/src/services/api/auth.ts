@@ -39,11 +39,6 @@ export async function getCurrentUserProfile(): Promise<{
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((error as any).status === 401 || (error as any).code === 'PGRST301') {
         await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-        try {
-          localStorage.removeItem('ideora_user_profile');
-        } catch {
-          // ignore
-        }
       }
       return { profile: null, error: null };
     }
@@ -133,6 +128,17 @@ export async function signUpWithEmail(
 }
 
 /**
+ * Determine the authoritative site origin for auth redirects
+ */
+const getAuthBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_SITE_URL;
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+  return envUrl || 'https://ideorahq.top';
+};
+
+/**
  * Sign in via GitHub OAuth
  */
 export async function signInWithGithub(): Promise<{ error: Error | null }> {
@@ -140,7 +146,7 @@ export async function signInWithGithub(): Promise<{ error: Error | null }> {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${getAuthBaseUrl()}/dashboard`,
       },
     });
 
@@ -157,6 +163,55 @@ export async function signInWithGithub(): Promise<{ error: Error | null }> {
 export async function signOutUser(): Promise<{ error: Error | null }> {
   try {
     const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    return { error: null };
+  } catch (err) {
+    return { error: err as Error };
+  }
+}
+
+/**
+ * Request password recovery email using Supabase Auth
+ * Sends a secure time-limited recovery link to the user's email
+ */
+export async function requestPasswordReset(
+  email: string,
+  redirectTo?: string
+): Promise<{ error: Error | null }> {
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    const targetRedirect = redirectTo || `${getAuthBaseUrl()}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: targetRedirect,
+    });
+
+    if (error) throw error;
+    return { error: null };
+  } catch (err) {
+    return { error: err as Error };
+  }
+}
+
+/**
+ * Update authenticated user password
+ * Used after following a valid recovery link or active recovery session
+ */
+export async function updateUserPassword(
+  newPassword: string
+): Promise<{ error: Error | null }> {
+  try {
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
     if (error) throw error;
     return { error: null };
   } catch (err) {

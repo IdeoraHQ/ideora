@@ -12,16 +12,20 @@
       name="description"
       content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
     />
+    <link rel="canonical" href="https://ideorahq.top/" />
 
     <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="IDEORA" />
+    <meta property="og:url" content="https://ideorahq.top/" />
     <meta property="og:title" content="IDEORA — Where Ideas Find Their Builders" />
     <meta
       property="og:description"
       content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
     />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://ideorahq.top/og-image.png" />
+    <meta property="og:image:secure_url" content="https://ideorahq.top/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="IDEORA — Where Ambitious Ideas Find Their Builders" />
@@ -34,7 +38,23 @@
       name="twitter:description"
       content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
     />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://ideorahq.top/og-image.png" />
+
+    <!-- Structured Data (JSON-LD) for Production Domain -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "IDEORA",
+        "url": "https://ideorahq.top/",
+        "description": "Where ambitious ideas find their builders. Co-founding and idea-adoption network.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://ideorahq.top/explore?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
     <!-- Font Preconnect & Outfit Family -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

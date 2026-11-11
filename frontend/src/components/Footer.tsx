@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
               <Github className="h-5 w-5" />
             </a>
             <a
-              href="https://discord.com"
+              href="https://discord.gg/SwaJqVftV"
               target="_blank"
               rel="noreferrer"
               className="p-2 rounded-lg hover:text-white hover:bg-white/10 transition-colors"

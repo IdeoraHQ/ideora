@@ -20,10 +20,12 @@ import { cn } from '@/utils/cn';
 
 interface DesktopSidebarProps {
   unreadNotificationsCount?: number;
+  unreadMessagesCount?: number;
 }
 
 export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   unreadNotificationsCount = 0,
+  unreadMessagesCount = 0,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { profile, signOut } = useAuth();
@@ -40,7 +42,12 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
     { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
     { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Users },
     { label: 'Projects', to: '/projects', icon: FolderGit2, badge: 'Soon' },
-    { label: 'Messages', to: '/messages', icon: MessageSquare, badge: 'Soon' },
+    {
+      label: 'Messages',
+      to: '/messages',
+      icon: MessageSquare,
+      count: unreadMessagesCount,
+    },
     {
       label: 'Notifications',
       to: '/notifications',

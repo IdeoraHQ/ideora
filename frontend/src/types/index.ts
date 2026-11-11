@@ -64,3 +64,22 @@ export type NotificationItem = Database['public']['Tables']['notifications']['Ro
   actor?: UserProfile | null;
   idea?: Pick<Database['public']['Tables']['ideas']['Row'], 'id' | 'title' | 'slug'> | null;
 };
+
+// Domain models for Direct Messaging
+export type Conversation = Database['public']['Tables']['conversations']['Row'] & {
+  idea?: Pick<Database['public']['Tables']['ideas']['Row'], 'id' | 'title' | 'slug' | 'category' | 'status'>;
+  creator?: UserProfile;
+  requester?: UserProfile;
+  collaboration_request?: Pick<
+    Database['public']['Tables']['collaboration_requests']['Row'],
+    'id' | 'status' | 'message' | 'role_id'
+  > & {
+    role?: IdeaRoleNeeded | null;
+  };
+  last_message?: Database['public']['Tables']['messages']['Row'] | null;
+  unread_count?: number;
+};
+
+export type Message = Database['public']['Tables']['messages']['Row'] & {
+  sender?: UserProfile;
+};

@@ -43,12 +43,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         location.pathname === '/dashboard' && location.search.includes('tab=ideas'),
     },
     {
-      label: 'Activity',
-      to: '/dashboard?tab=incoming',
+      label: 'Notifications',
+      to: '/notifications',
       icon: Bell,
       badge: unreadCount > 0 ? unreadCount : undefined,
-      isActive:
-        location.pathname === '/dashboard' && location.search.includes('tab=incoming'),
+      isActive: location.pathname.startsWith('/notifications'),
     },
     {
       label: 'Profile',

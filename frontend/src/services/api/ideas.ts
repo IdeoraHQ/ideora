@@ -7,6 +7,7 @@ import type {
 } from '@/types';
 
 type IdeaRow = Database['public']['Tables']['ideas']['Row'];
+type IdeaUpdate = Database['public']['Tables']['ideas']['Update'];
 type RoleRow = Database['public']['Tables']['idea_roles_needed']['Row'];
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
@@ -245,6 +246,39 @@ export async function updateIdeaStatus(
       .single();
 
     if (error) throw error;
+    invalidateIdeasCache();
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
+ * Update idea details (creator only)
+ */
+export async function updateIdea(
+  ideaId: string,
+  payload: Partial<CreateIdeaPayload>
+): Promise<{ data: IdeaRow | null; error: Error | null }> {
+  try {
+    const updateData: IdeaUpdate = {};
+    if (payload.title !== undefined) updateData.title = payload.title.trim();
+    if (payload.summary !== undefined) updateData.summary = payload.summary.trim();
+    if (payload.description !== undefined) updateData.description = payload.description.trim();
+    if (payload.category !== undefined) updateData.category = payload.category;
+    if (payload.collaboration_type !== undefined) updateData.collaboration_type = payload.collaboration_type;
+    if (payload.status !== undefined) updateData.status = payload.status;
+    if (payload.tags !== undefined) updateData.tags = payload.tags;
+
+    const { data, error } = await supabase
+      .from('ideas')
+      .update(updateData)
+      .eq('id', ideaId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    invalidateIdeasCache();
     return { data, error: null };
   } catch (err) {
     return { data: null, error: err as Error };
@@ -436,5 +470,45 @@ export async function createIdeaComment(
     return { data: data as unknown as IdeaComment, error: null };
   } catch (err) {
     return { data: null, error: err as Error };
+  }
+}
+
+export interface PlatformStats {
+  totalIdeas: number;
+  totalBuilders: number;
+  openRoles: number;
+}
+
+/**
+ * Fetch live platform statistics directly from Supabase.
+ * Uses exact head count queries with minimal network overhead.
+ */
+export async function fetchPlatformStats(): Promise<PlatformStats> {
+  try {
+    const [ideasRes, profilesRes, rolesRes] = await Promise.all([
+      supabase
+        .from('ideas')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'draft'),
+      supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true }),
+      supabase
+        .from('idea_roles_needed')
+        .select('*', { count: 'exact', head: true }),
+    ]);
+
+    return {
+      totalIdeas: ideasRes.count ?? 0,
+      totalBuilders: profilesRes.count ?? 0,
+      openRoles: rolesRes.count ?? 0,
+    };
+  } catch (err) {
+    console.error('Failed to fetch platform statistics:', err);
+    return {
+      totalIdeas: 0,
+      totalBuilders: 0,
+      openRoles: 0,
+    };
   }
 }
