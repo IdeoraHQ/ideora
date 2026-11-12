@@ -10,6 +10,8 @@ export type UserRole = 'founder' | 'collaborator' | 'admin';
 export type IdeaStatus = 'draft' | 'seeking_collaborators' | 'in_progress' | 'launched' | 'archived';
 export type CollaborationType = 'co_founder' | 'contributor' | 'advisor' | 'open_source';
 export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
+export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived';
+export type ProjectMemberRole = 'owner' | 'collaborator';
 export type NotificationType =
   | 'collaboration_request'
   | 'request_accepted'
@@ -371,6 +373,102 @@ export interface Database {
           },
         ];
       };
+      projects: {
+        Row: {
+          id: string;
+          idea_id: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          status: ProjectStatus;
+          created_at: string;
+          updated_at: string;
+          last_activity_at: string;
+        };
+        Insert: {
+          id?: string;
+          idea_id: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          status?: ProjectStatus;
+          created_at?: string;
+          updated_at?: string;
+          last_activity_at?: string;
+        };
+        Update: {
+          id?: string;
+          idea_id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string;
+          status?: ProjectStatus;
+          created_at?: string;
+          updated_at?: string;
+          last_activity_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'projects_idea_id_fkey';
+            columns: ['idea_id'];
+            isOneToOne: true;
+            referencedRelation: 'ideas';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'projects_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      project_members: {
+        Row: {
+          id: string;
+          project_id: string;
+          user_id: string;
+          collaboration_request_id: string | null;
+          role_title: string;
+          member_role: ProjectMemberRole;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          user_id: string;
+          collaboration_request_id?: string | null;
+          role_title?: string;
+          member_role?: ProjectMemberRole;
+          joined_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          user_id?: string;
+          collaboration_request_id?: string | null;
+          role_title?: string;
+          member_role?: ProjectMemberRole;
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'project_members_project_id_fkey';
+            columns: ['project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'project_members_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -412,6 +510,8 @@ export interface Database {
       idea_status: IdeaStatus;
       collaboration_type: CollaborationType;
       request_status: RequestStatus;
+      project_status: ProjectStatus;
+      project_member_role: ProjectMemberRole;
       notification_type: NotificationType;
     };
   };

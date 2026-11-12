@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, Compass, Users, Bell, ArrowRight } from 'lucide-react';
+import { PlusCircle, Compass, Users, Bell, FolderGit2, ArrowRight } from 'lucide-react';
 
 export const QuickActions: React.FC = () => {
   const actions = [
@@ -11,6 +11,14 @@ export const QuickActions: React.FC = () => {
       icon: PlusCircle,
       accent: 'text-brand-royal',
       buttonBg: 'bg-brand-royal text-white hover:bg-brand-deep',
+    },
+    {
+      title: 'Projects Hub',
+      description: 'Manage your active collaborations and project workspaces.',
+      to: '/projects',
+      icon: FolderGit2,
+      accent: 'text-brand-royal',
+      buttonBg: 'bg-surface-soft text-typography-navy hover:bg-surface-light border border-surface-border',
     },
     {
       title: 'Notifications Center',

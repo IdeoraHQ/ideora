@@ -12,6 +12,7 @@ import {
   PlusCircle,
   X,
   ArrowRight,
+  FolderGit2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -164,6 +165,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         >
           <PlusCircle className="h-3.5 w-3.5" />
           <span>New Idea</span>
+        </Link>
+
+        {/* Mobile Projects Shortcut (since DesktopSidebar is hidden on <md) */}
+        <Link
+          to="/projects"
+          className="md:hidden relative rounded-xl p-2 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
+          aria-label="Projects Hub"
+          title="Projects Hub"
+        >
+          <FolderGit2 className="h-5 w-5" />
         </Link>
 
         {/* Direct Messages Link */}
@@ -335,6 +346,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   >
                     <UserIcon className="h-4 w-4 text-brand-royal" />
                     View Profile
+                  </Link>
+                  <Link
+                    to="/projects"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-typography-charcoal hover:bg-surface-light"
+                  >
+                    <FolderGit2 className="h-4 w-4 text-brand-royal" />
+                    Projects Hub
                   </Link>
                   <Link
                     to="/dashboard?tab=ideas"

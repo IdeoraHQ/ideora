@@ -83,3 +83,17 @@ export type Conversation = Database['public']['Tables']['conversations']['Row'] 
 export type Message = Database['public']['Tables']['messages']['Row'] & {
   sender?: UserProfile;
 };
+
+// Domain models for Projects Hub & Workspaces
+export type ProjectMember = Database['public']['Tables']['project_members']['Row'] & {
+  user?: UserProfile;
+};
+
+export type Project = Database['public']['Tables']['projects']['Row'] & {
+  owner?: UserProfile;
+  idea?: Pick<
+    Database['public']['Tables']['ideas']['Row'],
+    'id' | 'title' | 'slug' | 'summary' | 'category' | 'collaboration_type' | 'status' | 'tags' | 'created_at'
+  >;
+  members?: ProjectMember[];
+};

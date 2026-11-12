@@ -13,6 +13,7 @@ import {
   Sparkles,
   X,
   ArrowRight,
+  FolderGit2,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
 import { useSupabaseStatus } from '@/hooks/useSupabaseStatus';
@@ -341,6 +342,15 @@ export const Navbar: React.FC = () => {
                     >
                       <LayoutDashboard className="h-4 w-4 text-brand-royal" />
                       Builder Workspace
+                    </Link>
+
+                    <Link
+                      to="/projects"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-typography-charcoal hover:bg-surface-light"
+                    >
+                      <FolderGit2 className="h-4 w-4 text-brand-royal" />
+                      Projects Hub
                     </Link>
 
                     <Link

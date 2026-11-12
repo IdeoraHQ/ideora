@@ -17,6 +17,7 @@ import {
   AlertCircle,
   MessageSquare,
   Bell,
+  FolderGit2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -266,6 +267,13 @@ export const DashboardPage: React.FC = () => {
           <Send className="h-3.5 w-3.5" />
           Sent Applications ({sentRequests.length})
         </button>
+        <Link
+          to="/projects"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl whitespace-nowrap text-typography-slate hover:text-typography-navy hover:bg-surface-white transition-colors"
+        >
+          <FolderGit2 className="h-3.5 w-3.5" />
+          Projects
+        </Link>
         <Link
           to="/notifications"
           className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl whitespace-nowrap text-typography-slate hover:text-typography-navy hover:bg-surface-white transition-colors"

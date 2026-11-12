@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
 import { useAuth } from '@/context/AuthContext';
@@ -36,12 +37,18 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
     navigate('/');
   };
 
-  const navItems = [
+  const navItems: Array<{
+    label: string;
+    to: string;
+    icon: LucideIcon;
+    count?: number;
+    badge?: string;
+  }> = [
     { label: 'Overview', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Explore Ideas', to: '/explore', icon: Compass },
     { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
     { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Users },
-    { label: 'Projects', to: '/projects', icon: FolderGit2, badge: 'Soon' },
+    { label: 'Projects', to: '/projects', icon: FolderGit2 },
     {
       label: 'Messages',
       to: '/messages',

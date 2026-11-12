@@ -13,6 +13,8 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { NotificationsPage } from '@/pages/NotificationsPage';
 import { MessagesPage } from '@/pages/MessagesPage';
+import { ProjectsPage } from '@/pages/ProjectsPage';
+import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export const AppRoutes: React.FC = () => {
@@ -46,6 +48,14 @@ export const AppRoutes: React.FC = () => {
       {/* 5. Direct Messaging Workspace */}
       <Route path="/messages" element={<DashboardLayout title="Direct Messages" breadcrumb="Messages" />}>
         <Route index element={<MessagesPage />} />
+      </Route>
+
+      {/* 6. Projects Hub & Individual Project Workspaces */}
+      <Route path="/projects" element={<DashboardLayout title="Projects Hub" breadcrumb="Projects" />}>
+        <Route index element={<ProjectsPage />} />
+      </Route>
+      <Route path="/projects/:id" element={<DashboardLayout title="Project Workspace" breadcrumb="Projects" />}>
+        <Route index element={<ProjectDetailPage />} />
       </Route>
 
       {/* 404 Fallback */}
