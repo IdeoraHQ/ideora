@@ -77,11 +77,28 @@ export async function signInWithEmail(
 }
 
 /**
- * Register a new account and create profile
+ * Determine the authoritative site origin for auth redirects
+ */
+const getAuthBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_SITE_URL;
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+  return envUrl || 'https://ideorahq.top';
+};
+
+/**
+ * Register a new account. Profile creation is handled atomically by the
+ * database handle_new_user() trigger on auth.users so signup works both
+ * with email verification enabled (session === null) and immediate sessions.
  */
 export async function signUpWithEmail(
   payload: SignUpPayload
-): Promise<{ profile: UserProfile | null; error: Error | null }> {
+): Promise<{
+  profile: UserProfile | null;
+  error: Error | null;
+  requiresEmailVerification?: boolean;
+}> {
   try {
     const cleanUsername = payload.username
       .trim()
@@ -92,13 +109,23 @@ export async function signUpWithEmail(
       throw new Error('Username must be at least 3 characters long');
     }
 
+    const safeRole: 'founder' | 'collaborator' =
+      payload.role === 'founder' ? 'founder' : 'collaborator';
+    const cleanName = payload.full_name.trim();
+    const cleanBio = payload.bio?.trim() || null;
+    const cleanSkills = Array.isArray(payload.skills) ? payload.skills : [];
+
     const { data, error } = await supabase.auth.signUp({
-      email: payload.email,
+      email: payload.email.trim(),
       password: payload.password,
       options: {
+        emailRedirectTo: `${getAuthBaseUrl()}/dashboard`,
         data: {
           username: cleanUsername,
-          full_name: payload.full_name.trim(),
+          full_name: cleanName,
+          role: safeRole,
+          skills: cleanSkills,
+          bio: cleanBio,
         },
       },
     });
@@ -106,37 +133,49 @@ export async function signUpWithEmail(
     if (error) throw error;
     if (!data.user) throw new Error('Could not create user account');
 
-    // Update profile with role, skills, and bio
-    const { data: updatedProfile, error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: data.user.id,
-        username: cleanUsername,
-        full_name: payload.full_name.trim(),
-        role: payload.role,
-        skills: payload.skills,
-        bio: payload.bio?.trim() || null,
-      })
-      .select()
-      .single();
+    // When email verification is required, signUp returns session === null.
+    // The database trigger handle_new_user() already created the profile; do not
+    // issue anon writes to public.profiles.
+    if (!data.session) {
+      return {
+        profile: null,
+        error: null,
+        requiresEmailVerification: true,
+      };
+    }
 
-    if (profileError) throw profileError;
-    return { profile: updatedProfile, error: null };
+    // Immediate session available (e.g., email confirmation disabled):
+    // Fetch the profile created by handle_new_user() without duplicate INSERT/UPSERT.
+    const { data: createdProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (createdProfile && createdProfile.role !== safeRole) {
+      const { data: roleProfile, error: roleError } = await supabase.rpc(
+        'switch_creator_collaborator_role',
+        { p_role: safeRole }
+      );
+      if (roleError) throw roleError;
+      return {
+        profile: roleProfile,
+        error: null,
+        requiresEmailVerification: false,
+      };
+    }
+
+    return {
+      profile: createdProfile,
+      error: null,
+      requiresEmailVerification: false,
+    };
   } catch (err) {
     return { profile: null, error: err as Error };
   }
 }
-
-/**
- * Determine the authoritative site origin for auth redirects
- */
-const getAuthBaseUrl = (): string => {
-  const envUrl = import.meta.env.VITE_SITE_URL;
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return window.location.origin;
-  }
-  return envUrl || 'https://ideorahq.top';
-};
 
 /**
  * Sign in via GitHub OAuth

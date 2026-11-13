@@ -1,4 +1,5 @@
 import { supabase } from '@/services/supabase/client';
+import { recordFeedbackEngagement } from '@/services/api/feedback';
 import type {
   Database,
   SubmitCollaborationPayload,
@@ -41,6 +42,7 @@ export async function submitCollaborationRequest(
       .single();
 
     if (error) throw error;
+    void recordFeedbackEngagement('meaningful_action', 0, 'collaboration_request');
     return { data: data as unknown as CollaborationRequest, error: null };
   } catch (err) {
     return { data: null, error: err as Error };

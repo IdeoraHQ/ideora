@@ -5,3 +5,6 @@ export * from './profiles';
 export * from './notifications';
 export * from './messages';
 export * from './projects';
+export * from './admin';
+export * from './feedback';
+export * from './settings';

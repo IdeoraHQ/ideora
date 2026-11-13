@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  ShieldCheck,
+  MessageSquarePlus,
   type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
@@ -61,7 +63,11 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
       icon: Bell,
       count: unreadNotificationsCount,
     },
+    { label: 'Feedback', to: '/feedback', icon: MessageSquarePlus },
     { label: 'Settings', to: '/settings', icon: Settings },
+    ...(profile?.role === 'admin'
+      ? [{ label: 'Admin Center', to: '/admin', icon: ShieldCheck }]
+      : []),
   ];
 
   return (

@@ -97,3 +97,66 @@ export type Project = Database['public']['Tables']['projects']['Row'] & {
   >;
   members?: ProjectMember[];
 };
+
+// Domain models for Admin Control Center & Moderation
+export type Report = Database['public']['Tables']['reports']['Row'] & {
+  reporter?: UserProfile;
+  resolver?: UserProfile | null;
+};
+
+export type IdeaModerationHistoryItem =
+  Database['public']['Tables']['idea_moderation_history']['Row'] & {
+    admin?: UserProfile;
+  };
+
+export type AdminAuditLog = Database['public']['Tables']['admin_audit_logs']['Row'] & {
+  admin?: UserProfile;
+};
+
+export interface AdminPlatformStats {
+  total_users: number;
+  active_users: number;
+  suspended_users: number;
+  banned_users: number;
+  admin_users: number;
+  total_ideas: number;
+  published_ideas: number;
+  draft_ideas: number;
+  flagged_or_removed_ideas: number;
+  total_projects: number;
+  active_projects: number;
+  open_reports: number;
+}
+
+// Domain models for Feedback Center & Prompt
+export type FeedbackRow = Database['public']['Tables']['feedback']['Row'];
+export type UserFeedbackItem = Omit<
+  FeedbackRow,
+  'internal_notes' | 'reviewed_by' | 'reviewed_at'
+>;
+export type FeedbackPromptState =
+  Database['public']['Tables']['feedback_prompt_state']['Row'];
+
+export type AdminFeedbackSummary =
+  Database['public']['Functions']['admin_get_feedback_summary']['Returns'];
+export type AdminFeedbackItem =
+  Database['public']['Functions']['admin_list_feedback']['Returns'][number];
+
+export interface SubmitFeedbackPayload {
+  feedback_type: Database['public']['Enums']['feedback_type'];
+  category?: string;
+  title: string;
+  description: string;
+  benefit_or_impact?: string;
+  steps_to_reproduce?: string;
+  expected_behavior?: string;
+  actual_behavior?: string;
+  page_url?: string;
+  priority?: Database['public']['Enums']['feedback_priority'] | '';
+  screenshotFile?: File | null;
+}
+
+// Domain models for User Settings & Account Deletion
+export type UserSettings = Database['public']['Tables']['user_settings']['Row'];
+export type AccountDeletionRequest =
+  Database['public']['Tables']['account_deletion_requests']['Row'];

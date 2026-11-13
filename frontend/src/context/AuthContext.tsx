@@ -21,7 +21,9 @@ interface AuthContextValue {
   loading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (payload: SignUpPayload) => Promise<{ error: Error | null }>;
+  signUp: (
+    payload: SignUpPayload
+  ) => Promise<{ error: Error | null; requiresEmailVerification?: boolean }>;
   signInGithub: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -96,11 +98,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signUp = async (payload: SignUpPayload) => {
-    const { profile: created, error } = await signUpWithEmail(payload);
+    const {
+      profile: created,
+      error,
+      requiresEmailVerification,
+    } = await signUpWithEmail(payload);
     if (!error && created) {
       saveProfile(created);
     }
-    return { error };
+    return { error, requiresEmailVerification };
   };
 
   const signInGithub = async () => {

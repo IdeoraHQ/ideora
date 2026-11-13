@@ -1,4 +1,5 @@
 import { supabase } from '@/services/supabase/client';
+import { recordFeedbackEngagement } from '@/services/api/feedback';
 import type {
   Database,
   CreateIdeaPayload,
@@ -224,6 +225,7 @@ export async function createIdea(
     }
 
     invalidateIdeasCache();
+    void recordFeedbackEngagement('meaningful_action', 0, 'publish_idea');
     return { data: idea, error: null };
   } catch (err) {
     return { data: null, error: err as Error };
@@ -286,14 +288,17 @@ export async function updateIdea(
 }
 
 /**
- * Delete an idea (creator only)
+ * Soft-delete an idea (creator only; preserves moderation history)
  */
 export async function deleteIdea(
   ideaId: string
 ): Promise<{ error: Error | null }> {
   try {
-    const { error } = await supabase.from('ideas').delete().eq('id', ideaId);
+    const { error } = await supabase.rpc('soft_delete_own_idea', {
+      p_idea_id: ideaId,
+    });
     if (error) throw error;
+    invalidateIdeasCache();
     return { error: null };
   } catch (err) {
     return { error: err as Error };

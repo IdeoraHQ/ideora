@@ -10,6 +10,7 @@ import {
   ArrowRight,
   AlertCircle,
   ArrowLeft,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
@@ -39,6 +40,7 @@ export const AuthPage: React.FC = () => {
   const [skills, setSkills] = useState<string[]>(['fullstack']);
   const [bio, setBio] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [verificationEmailSent, setVerificationEmailSent] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const redirectTo =
@@ -53,6 +55,7 @@ export const AuthPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setVerificationEmailSent(null);
     setSubmitting(true);
 
     try {
@@ -60,7 +63,7 @@ export const AuthPage: React.FC = () => {
         const { error: signInErr } = await signIn(email, password);
         if (signInErr) throw signInErr;
       } else {
-        const { error: signUpErr } = await signUp({
+        const { error: signUpErr, requiresEmailVerification } = await signUp({
           email,
           password,
           full_name: fullName,
@@ -70,6 +73,10 @@ export const AuthPage: React.FC = () => {
           bio,
         });
         if (signUpErr) throw signUpErr;
+        if (requiresEmailVerification) {
+          setVerificationEmailSent(email.trim());
+          return;
+        }
       }
       navigate(redirectTo);
     } catch (err) {
@@ -163,6 +170,37 @@ export const AuthPage: React.FC = () => {
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-functional-error/30 bg-functional-error-light p-3 text-xs font-semibold text-functional-error">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {verificationEmailSent && (
+          <div className="mt-4 rounded-xl border border-brand-royal/25 bg-brand-ice/60 p-4 text-xs text-typography-navy">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-royal mt-0.5" />
+              <div className="space-y-1.5">
+                <p className="font-bold text-brand-royal">
+                  Check your email to verify your account
+                </p>
+                <p className="text-typography-slate leading-relaxed">
+                  We sent a confirmation link to{' '}
+                  <span className="font-semibold text-typography-navy">
+                    {verificationEmailSent}
+                  </span>
+                  . Click the link in your inbox to activate your profile, then
+                  sign in.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signin');
+                    setVerificationEmailSent(null);
+                  }}
+                  className="inline-flex items-center gap-1 font-semibold text-brand-royal hover:underline"
+                >
+                  Go to Sign In
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -364,13 +402,33 @@ export const AuthPage: React.FC = () => {
             <Github className="h-4 w-4" />
             <span>Continue with GitHub</span>
           </button>
+
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-typography-muted">
+            By continuing with email or OAuth sign-in, you agree to IDEORA&rsquo;s{' '}
+            <Link to="/terms" className="font-semibold text-brand-royal hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="font-semibold text-brand-royal hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>
 
     {/* Discreet Auth Footer */}
-      <footer className="pt-8 text-center text-xs text-typography-muted">
-        &copy; {new Date().getFullYear()} IDEORA &bull; Where ideas find their builders.
+      <footer className="pt-8 text-center text-xs text-typography-muted space-x-2">
+        <span>&copy; {new Date().getFullYear()} IDEORA &bull; Where ideas find their builders.</span>
+        <span>&bull;</span>
+        <Link to="/privacy" className="hover:text-brand-royal hover:underline">
+          Privacy Policy
+        </Link>
+        <span>&bull;</span>
+        <Link to="/terms" className="hover:text-brand-royal hover:underline">
+          Terms of Service
+        </Link>
       </footer>
     </div>
   );

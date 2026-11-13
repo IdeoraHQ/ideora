@@ -14,6 +14,9 @@ import {
   X,
   ArrowRight,
   FolderGit2,
+  ShieldCheck,
+  MessageSquarePlus,
+  Settings,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
 import { useSupabaseStatus } from '@/hooks/useSupabaseStatus';
@@ -353,6 +356,16 @@ export const Navbar: React.FC = () => {
                       Projects Hub
                     </Link>
 
+                    {profile.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-brand-royal hover:bg-brand-royal/5"
+                      >
+                        <ShieldCheck className="h-4 w-4 text-brand-royal" />
+                        Admin Center
+                      </Link>
+                    )}
                     <Link
                       to={`/profile/${profile.username}`}
                       onClick={() => setUserMenuOpen(false)}
@@ -360,6 +373,22 @@ export const Navbar: React.FC = () => {
                     >
                       <UserIcon className="h-4 w-4 text-brand-royal" />
                       My Profile
+                    </Link>
+                    <Link
+                      to="/feedback"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-typography-charcoal hover:bg-surface-light"
+                    >
+                      <MessageSquarePlus className="h-4 w-4 text-brand-royal" />
+                      Feedback Center
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-typography-charcoal hover:bg-surface-light"
+                    >
+                      <Settings className="h-4 w-4 text-brand-royal" />
+                      Settings
                     </Link>
 
                     <button

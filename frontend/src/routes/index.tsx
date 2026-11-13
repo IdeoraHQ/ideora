@@ -15,6 +15,14 @@ import { NotificationsPage } from '@/pages/NotificationsPage';
 import { MessagesPage } from '@/pages/MessagesPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
+import { AdminRoute } from '@/components/auth/AdminRoute';
+import { AdminLayout } from '@/layouts/AdminLayout';
+import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage';
+import { AdminFeedbackPage } from '@/pages/admin/AdminFeedbackPage';
+import { FeedbackPage } from '@/pages/FeedbackPage';
+import { SettingsPage } from '@/pages/SettingsPage';
+import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from '@/pages/TermsOfServicePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export const AppRoutes: React.FC = () => {
@@ -33,6 +41,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="ideas/:slug" element={<IdeaDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:username" element={<ProfilePage />} />
+        <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="terms" element={<TermsOfServicePage />} />
       </Route>
 
       {/* 3. Authenticated App Workspace wrapped in DashboardLayout (Desktop Left Sidebar + Mobile Fixed Bottom Nav) */}
@@ -56,6 +66,24 @@ export const AppRoutes: React.FC = () => {
       </Route>
       <Route path="/projects/:id" element={<DashboardLayout title="Project Workspace" breadcrumb="Projects" />}>
         <Route index element={<ProjectDetailPage />} />
+      </Route>
+
+      {/* 7. Feedback Center */}
+      <Route path="/feedback" element={<DashboardLayout title="Feedback Center" breadcrumb="Feedback" />}>
+        <Route index element={<FeedbackPage />} />
+      </Route>
+
+      {/* 8. User Settings */}
+      <Route path="/settings" element={<DashboardLayout title="Account Settings" breadcrumb="Settings" />}>
+        <Route index element={<SettingsPage />} />
+      </Route>
+
+      {/* Protected Admin Control Center */}
+      <Route path="/admin" element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminOverviewPage />} />
+          <Route path="feedback" element={<AdminFeedbackPage />} />
+        </Route>
       </Route>
 
       {/* 404 Fallback */}

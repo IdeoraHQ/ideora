@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
 import { Github, Twitter, Linkedin, MessageSquare } from 'lucide-react';
 
@@ -65,7 +66,27 @@ export const Footer: React.FC = () => {
 
         <div className="mt-8 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-pale/70">
           <p>&copy; {new Date().getFullYear()} IDEORA. All rights reserved.</p>
-          <p>Collaborative ecosystem for unfinished ideas and active builders.</p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/privacy"
+              className="text-brand-pale hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span aria-hidden="true">&bull;</span>
+            <Link
+              to="/terms"
+              className="text-brand-pale hover:text-white transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <span className="hidden sm:inline" aria-hidden="true">
+              &bull;
+            </span>
+            <span className="hidden sm:inline">
+              Collaborative ecosystem for unfinished ideas and active builders.
+            </span>
+          </div>
         </div>
       </div>
     </footer>

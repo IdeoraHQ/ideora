@@ -1492,16 +1492,17 @@ export const IdeaDetailPage: React.FC = () => {
                 <label className="block text-xs font-semibold text-typography-navy mb-1.5">
                   Estimated Weekly Availability
                 </label>
-                <select
+                <CustomSelect
                   value={commitmentHours}
-                  onChange={(e) => setCommitmentHours(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-soft p-2.5 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
-                >
-                  <option value="5-10">5 &ndash; 10 hours / week</option>
-                  <option value="10-15">10 &ndash; 15 hours / week</option>
-                  <option value="15-20">15 &ndash; 20 hours / week</option>
-                  <option value="20+">20+ hours / week (Full commitment)</option>
-                </select>
+                  onChange={setCommitmentHours}
+                  triggerClassName="bg-surface-soft p-2.5"
+                  options={[
+                    { label: '5 – 10 hours / week', value: '5-10' },
+                    { label: '10 – 15 hours / week', value: '10-15' },
+                    { label: '15 – 20 hours / week', value: '15-20' },
+                    { label: '20+ hours / week (Full commitment)', value: '20+' },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -1600,33 +1601,32 @@ export const IdeaDetailPage: React.FC = () => {
                   <label className="block text-xs font-semibold text-typography-navy mb-1">
                     Category
                   </label>
-                  <select
+                  <CustomSelect
                     value={editCategory}
-                    onChange={(e) => setEditCategory(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
-                  >
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setEditCategory}
+                    triggerClassName="bg-surface-soft px-3 py-2"
+                    options={categoryOptions.map((cat) => ({
+                      label: cat,
+                      value: cat,
+                    }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-typography-navy mb-1">
                     Collaboration Model
                   </label>
-                  <select
+                  <CustomSelect
                     value={editCollabType}
-                    onChange={(e) => setEditCollabType(e.target.value as CollaborationType)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
-                  >
-                    <option value="co_founder">Looking for Co-Founder</option>
-                    <option value="contributor">Seeking Contributors</option>
-                    <option value="open_source">Open Source Build</option>
-                    <option value="advisor">Up for Adoption / Advisory</option>
-                  </select>
+                    onChange={(val) => setEditCollabType(val as CollaborationType)}
+                    triggerClassName="bg-surface-soft px-3 py-2"
+                    options={[
+                      { label: 'Looking for Co-Founder', value: 'co_founder' },
+                      { label: 'Seeking Contributors', value: 'contributor' },
+                      { label: 'Open Source Build', value: 'open_source' },
+                      { label: 'Up for Adoption / Advisory', value: 'advisor' },
+                    ]}
+                  />
                 </div>
               </div>
 

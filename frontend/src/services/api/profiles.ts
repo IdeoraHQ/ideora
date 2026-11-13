@@ -44,14 +44,28 @@ export async function updateCurrentProfile(
       throw new Error('Not authenticated');
     }
 
+    const { role, ...safeProfileFields } = payload;
+
     const { data, error } = await supabase
       .from('profiles')
-      .update(payload)
+      .update(safeProfileFields)
       .eq('id', user.id)
       .select()
       .single();
 
     if (error) throw error;
+
+    if (role === 'founder' || role === 'collaborator') {
+      if (data.role !== 'admin' && data.role !== role) {
+        const { data: roleUpdated, error: roleError } = await supabase.rpc(
+          'switch_creator_collaborator_role',
+          { p_role: role }
+        );
+        if (roleError) throw roleError;
+        return { data: roleUpdated, error: null };
+      }
+    }
+
     return { data, error: null };
   } catch (err) {
     return { data: null, error: err as Error };

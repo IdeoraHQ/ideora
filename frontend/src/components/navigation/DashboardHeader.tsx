@@ -13,6 +13,9 @@ import {
   X,
   ArrowRight,
   FolderGit2,
+  ShieldCheck,
+  MessageSquarePlus,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -339,6 +342,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 </div>
 
                 <div className="py-1">
+                  {profile.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-brand-royal hover:bg-brand-royal/5"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-brand-royal" />
+                      Admin Center
+                    </Link>
+                  )}
                   <Link
                     to={`/profile/${profile.username}`}
                     onClick={() => setIsUserMenuOpen(false)}
@@ -346,6 +359,22 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   >
                     <UserIcon className="h-4 w-4 text-brand-royal" />
                     View Profile
+                  </Link>
+                  <Link
+                    to="/feedback"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-typography-charcoal hover:bg-surface-light"
+                  >
+                    <MessageSquarePlus className="h-4 w-4 text-brand-royal" />
+                    Feedback Center
+                  </Link>
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-typography-charcoal hover:bg-surface-light"
+                  >
+                    <Settings className="h-4 w-4 text-brand-royal" />
+                    Settings
                   </Link>
                   <Link
                     to="/projects"
