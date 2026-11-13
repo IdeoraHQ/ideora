@@ -32,7 +32,8 @@ export type NotificationType =
   | 'request_declined'
   | 'new_comment'
   | 'idea_upvoted'
-  | 'new_message';
+  | 'new_message'
+  | 'feedback_updated';
 
 export interface Database {
   public: {

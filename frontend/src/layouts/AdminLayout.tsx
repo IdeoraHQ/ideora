@@ -193,9 +193,17 @@ export const AdminLayout: React.FC = () => {
         <div className="border-t border-surface-border p-3">
           {profile && (
             <div className="flex items-center gap-3 rounded-xl p-2 bg-surface-soft border border-surface-border/60">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-semibold">
-                {profile.full_name?.charAt(0).toUpperCase() || 'A'}
-              </div>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="h-8 w-8 shrink-0 rounded-lg object-cover border border-surface-border"
+                />
+              ) : (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-semibold">
+                  {profile.full_name?.charAt(0).toUpperCase() || 'A'}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-typography-navy truncate">
                   {profile.full_name}

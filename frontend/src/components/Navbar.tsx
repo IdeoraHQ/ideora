@@ -316,9 +316,17 @@ export const Navbar: React.FC = () => {
                   onClick={() => setUserMenuOpen((prev) => !prev)}
                   className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
                 >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-royal text-white text-xs font-bold">
-                    {profile.full_name.charAt(0).toUpperCase()}
-                  </div>
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name}
+                      className="h-6 w-6 rounded-full object-cover border border-surface-border shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-royal text-white text-xs font-bold shrink-0">
+                      {profile.full_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="hidden sm:inline max-w-[100px] truncate">
                     {profile.full_name}
                   </span>

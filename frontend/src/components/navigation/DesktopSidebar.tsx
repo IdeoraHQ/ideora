@@ -164,9 +164,17 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
               isCollapsed && 'justify-center p-1.5'
             )}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-semibold shadow-sm">
-              {profile.full_name?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.full_name}
+                className="h-8 w-8 shrink-0 rounded-lg object-cover border border-surface-border shadow-sm"
+              />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-semibold shadow-sm">
+                {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-typography-navy truncate leading-tight">

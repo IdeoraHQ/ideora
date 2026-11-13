@@ -7,6 +7,7 @@ import {
   XCircle,
   Users,
   MessageSquare,
+  MessageSquarePlus,
   ThumbsUp,
   Sparkles,
   ArrowRight,
@@ -130,6 +131,11 @@ export const NotificationsPage: React.FC = () => {
       return;
     }
 
+    if (notif.type === 'feedback_updated') {
+      navigate('/feedback');
+      return;
+    }
+
     if (notif.idea?.slug) {
       navigate(`/ideas/${notif.idea.slug}`);
       return;
@@ -209,6 +215,13 @@ export const NotificationsPage: React.FC = () => {
           bg: 'bg-brand-pale/40 text-brand-royal border-brand-royal/20',
           badgeText: 'Endorsement',
           actionText: 'View Idea',
+        };
+      case 'feedback_updated':
+        return {
+          icon: MessageSquarePlus,
+          bg: 'bg-brand-ice text-brand-royal border-brand-pale',
+          badgeText: 'Feedback Update',
+          actionText: 'View Feedback',
         };
       default:
         return {

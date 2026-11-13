@@ -319,9 +319,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               onClick={() => setIsUserMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft p-1 sm:px-2.5 sm:py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-bold shadow-sm">
-                {profile.full_name?.charAt(0).toUpperCase() || 'U'}
-              </div>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="h-7 w-7 rounded-lg object-cover border border-surface-border shadow-sm shrink-0"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-bold shadow-sm shrink-0">
+                  {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
               <span className="hidden sm:inline max-w-[110px] truncate text-left">
                 {profile.full_name}
               </span>
