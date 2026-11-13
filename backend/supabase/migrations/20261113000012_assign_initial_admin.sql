@@ -6,6 +6,12 @@
 -- safely via migration (postgres/service role) and records a system audit log.
 -- ==============================================================================
 
+ALTER TABLE public.admin_audit_logs
+    ADD COLUMN IF NOT EXISTS actor_type TEXT NOT NULL DEFAULT 'admin';
+
+ALTER TABLE public.admin_audit_logs
+    ALTER COLUMN admin_id DROP NOT NULL;
+
 DO $$
 DECLARE
     v_target_id CONSTANT UUID := 'b279e57f-60e6-4ebc-b0c1-d7e2875b955f';

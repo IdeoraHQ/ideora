@@ -482,6 +482,9 @@ GRANT EXECUTE ON FUNCTION public.respond_to_feedback_prompt(TEXT) TO authenticat
 -- ------------------------------------------------------------------------------
 -- 5. ADMIN FEEDBACK MANAGEMENT RPCS
 -- ------------------------------------------------------------------------------
+ALTER TABLE public.admin_audit_logs
+    ADD COLUMN IF NOT EXISTS actor_type TEXT NOT NULL DEFAULT 'admin';
+
 CREATE OR REPLACE FUNCTION public.admin_get_feedback_summary()
 RETURNS JSONB
 LANGUAGE plpgsql
