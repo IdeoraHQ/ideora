@@ -6,7 +6,10 @@ import {
   CheckCircle2,
   Settings,
   Save,
+  ShieldCheck,
+  Smartphone,
 } from 'lucide-react';
+import { supabase } from '@/services/supabase/client';
 import {
   fetchAdminPlatformSettings,
   adminUpdatePlatformSetting,
@@ -32,11 +35,30 @@ export const AdminSettingsPage: React.FC = () => {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
+  const [totpFactor, setTotpFactor] = useState<{
+    id: string;
+    friendlyName?: string;
+    createdAt?: string;
+  } | null>(null);
+  const [resettingMfa, setResettingMfa] = useState(false);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchErr } = await fetchAdminPlatformSettings();
+    const [{ data, error: fetchErr }, { data: factorsData }] = await Promise.all([
+      fetchAdminPlatformSettings(),
+      supabase.auth.mfa.listFactors(),
+    ]);
+    const verifiedTotp = (factorsData?.totp ?? []).find((f) => f.status === 'verified');
+    setTotpFactor(
+      verifiedTotp
+        ? {
+            id: verifiedTotp.id,
+            friendlyName: verifiedTotp.friendly_name,
+            createdAt: verifiedTotp.created_at,
+          }
+        : null
+    );
     if (fetchErr) {
       setError(fetchErr.message || 'Failed to load platform settings.');
     } else {
@@ -93,6 +115,21 @@ export const AdminSettingsPage: React.FC = () => {
     setSaveMsg(`Updated setting "${key}" and recorded audit log.`);
     setReasons((prev) => ({ ...prev, [key]: '' }));
     await loadSettings();
+  };
+
+  const handleResetAuthenticator = async () => {
+    if (!totpFactor || resettingMfa) return;
+    setResettingMfa(true);
+    setSaveErr(null);
+    const { error: unenrollErr } = await supabase.auth.mfa.unenroll({
+      factorId: totpFactor.id,
+    });
+    if (unenrollErr) {
+      setSaveErr(unenrollErr.message || 'Failed to reset authenticator.');
+      setResettingMfa(false);
+      return;
+    }
+    window.location.href = '/admin';
   };
 
   return (
@@ -239,6 +276,50 @@ export const AdminSettingsPage: React.FC = () => {
           })}
         </div>
       )}
+      {/* Admin Google Authenticator (2FA) Security Card */}
+      <div className="rounded-2xl border border-surface-border bg-surface-white p-5 shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-ice text-brand-royal">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-typography-navy font-heading">
+                  Admin Google Authenticator (2FA)
+                </h2>
+                {totpFactor && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-functional-success-light px-2 py-0.5 text-[10px] font-semibold text-functional-success">
+                    <ShieldCheck className="h-3 w-3" />
+                    AAL2 Active
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-typography-muted mt-0.5">
+                {totpFactor
+                  ? `Active factor: ${totpFactor.friendlyName || 'Ideora Admin Authenticator'}${
+                      totpFactor.createdAt
+                        ? ` (enrolled ${new Date(totpFactor.createdAt).toLocaleDateString()})`
+                        : ''
+                    }`
+                  : 'TOTP multi-factor authentication protects Admin Control Center access.'}
+              </p>
+            </div>
+          </div>
+
+          {totpFactor && (
+            <button
+              type="button"
+              onClick={() => void handleResetAuthenticator()}
+              disabled={resettingMfa}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-functional-error/30 bg-functional-error-light/50 px-3.5 py-2 text-xs font-semibold text-functional-error hover:bg-functional-error-light transition-colors disabled:opacity-60 shrink-0"
+            >
+              {resettingMfa && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>Reset &amp; Re-scan QR</span>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

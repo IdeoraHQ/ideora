@@ -331,7 +331,7 @@ export async function fetchAdminUsers(filters?: {
         role,
         created_at,
         updated_at,
-        security_status:profile_security_status(account_status, status_reason, suspended_until, updated_at)
+        security_status:profile_security_status!profile_security_status_user_id_fkey(account_status, status_reason, suspended_until, updated_at)
       `
       )
       .order('created_at', { ascending: false });
