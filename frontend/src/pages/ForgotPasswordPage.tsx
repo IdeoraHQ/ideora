@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, RotateCw } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { requestPasswordReset } from '@/services/api';
 
 export const ForgotPasswordPage: React.FC = () => {
@@ -52,6 +53,12 @@ export const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-soft flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <SeoHead
+        title="Reset Password | Ideora"
+        description="Request a password reset link for your Ideora account."
+        canonicalPath="/forgot-password"
+        noindex
+      />
       {/* Top Branding Bar */}
       <header className="mx-auto w-full max-w-xl flex items-center justify-between pb-4">
         <Link to="/" className="flex items-center gap-2.5 group" title="Return to IDEORA">

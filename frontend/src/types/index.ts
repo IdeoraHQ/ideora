@@ -160,3 +160,5 @@ export interface SubmitFeedbackPayload {
 export type UserSettings = Database['public']['Tables']['user_settings']['Row'];
 export type AccountDeletionRequest =
   Database['public']['Tables']['account_deletion_requests']['Row'];
+export type PlatformSetting =
+  Database['public']['Tables']['platform_settings']['Row'];

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, FileText, ArrowRight, Mail } from 'lucide-react';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 interface PolicySection {
   id: string;
@@ -293,6 +294,11 @@ const sections: PolicySection[] = [
 export const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="bg-surface-soft py-12 sm:py-16">
+      <SeoHead
+        title="Privacy Policy | Ideora"
+        description="Read the Ideora Privacy Policy to learn how we collect, use, and protect your account, profile, and collaboration data."
+        canonicalPath="/privacy"
+      />
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="rounded-2xl border border-surface-border bg-surface-white p-6 sm:p-10 shadow-sm">

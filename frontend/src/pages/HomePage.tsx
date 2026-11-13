@@ -16,6 +16,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { IdeaCard } from '@/features/ideas/components/IdeaCard';
+import { SeoHead } from '@/components/seo/SeoHead';
 import type { Idea } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -107,6 +108,11 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="relative isolate overflow-hidden bg-surface-soft font-sans">
+      <SeoHead
+        title="Ideora — Where Unfinished Ideas Find Their Builders"
+        description="Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora."
+        canonicalPath="/"
+      />
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (Reference: Give Your Ideas A Second Life + Floating Preview) */}
       {/* ========================================================================= */}
@@ -143,7 +149,7 @@ export const HomePage: React.FC = () => {
 
             {/* Subheading */}
             <p className="text-base sm:text-lg text-typography-slate font-normal leading-relaxed max-w-xl">
-              Discover unfinished ideas, find collaborators, and turn abandoned concepts into real projects.
+              Too many promising concepts stall before they are built. Ideora is a collaborative platform where idea owners publish unfinished projects and builders discover initiatives to co-create together.
             </p>
 
             {/* Action Buttons */}
@@ -199,9 +205,9 @@ export const HomePage: React.FC = () => {
 
               {/* Welcome text */}
               <div className="mt-4">
-                <h3 className="text-base font-semibold text-typography-navy font-heading">
+                <p className="text-base font-semibold text-typography-navy font-heading">
                   Welcome back, Builder! 👋
-                </h3>
+                </p>
                 <p className="text-xs text-typography-muted">Great ideas are better together.</p>
               </div>
 
@@ -258,9 +264,9 @@ export const HomePage: React.FC = () => {
                         by @{topIdea.author?.username || 'founder'}
                       </span>
                     </div>
-                    <h4 className="mt-1 text-sm font-semibold text-typography-navy group-hover:text-brand-royal transition-colors truncate">
+                    <p className="mt-1 text-sm font-semibold text-typography-navy group-hover:text-brand-royal transition-colors truncate">
                       {topIdea.title}
-                    </h4>
+                    </p>
                     <p className="mt-0.5 text-xs text-typography-slate line-clamp-1">
                       {topIdea.summary}
                     </p>
@@ -489,9 +495,9 @@ export const HomePage: React.FC = () => {
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-16">
         <div className="rounded-3xl bg-gradient-to-r from-brand-royal via-brand-deep to-[#0F172A] p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <h3 className="text-2xl sm:text-3xl font-light font-heading tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-light font-heading tracking-tight">
               Join a community of innovators and builders
-            </h3>
+            </h2>
             <p className="text-xs sm:text-sm text-white/80 font-normal leading-relaxed">
               Be part of a growing network of creators, developers, and problem solvers.
             </p>
@@ -542,7 +548,7 @@ export const HomePage: React.FC = () => {
                   SA
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-typography-navy">Sarah Adeola</h4>
+                  <p className="text-xs font-semibold text-typography-navy">Sarah Adeola</p>
                   <p className="text-[11px] text-typography-muted">Product Designer</p>
                 </div>
               </div>
@@ -559,7 +565,7 @@ export const HomePage: React.FC = () => {
                   DO
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-typography-navy">David Okafor</h4>
+                  <p className="text-xs font-semibold text-typography-navy">David Okafor</p>
                   <p className="text-[11px] text-typography-muted">Full Stack Developer</p>
                 </div>
               </div>
@@ -576,7 +582,7 @@ export const HomePage: React.FC = () => {
                   AY
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-typography-navy">Amina Yusuf</h4>
+                  <p className="text-xs font-semibold text-typography-navy">Amina Yusuf</p>
                   <p className="text-[11px] text-typography-muted">Software Engineer</p>
                 </div>
               </div>

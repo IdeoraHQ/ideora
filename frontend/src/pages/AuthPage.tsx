@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
+import { SeoHead } from '@/components/seo/SeoHead';
 import type { UserRole, SkillCategory } from '@/types';
 
 const availableSkills: { label: string; value: SkillCategory }[] = [
@@ -96,6 +97,12 @@ export const AuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-soft flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8">
+      <SeoHead
+        title={mode === 'signin' ? 'Sign In | Ideora' : 'Create Account | Ideora'}
+        description="Sign in or create an Ideora account to publish ideas and collaborate with builders."
+        canonicalPath="/auth"
+        noindex
+      />
       {/* Standalone Brand Bar */}
       <header className="mx-auto w-full max-w-xl flex items-center justify-between pb-4">
         <Link to="/" className="flex items-center gap-2.5 group" title="Return to IDEORA">

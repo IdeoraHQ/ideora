@@ -4,6 +4,7 @@ import { DesktopSidebar } from '@/components/navigation/DesktopSidebar';
 import { DashboardHeader } from '@/components/navigation/DashboardHeader';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { useAuth } from '@/context/AuthContext';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { fetchUnreadNotificationsCount, fetchTotalUnreadMessagesCount } from '@/services/api';
 
 interface DashboardLayoutProps {
@@ -41,6 +42,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-surface-soft text-typography-charcoal font-sans">
+      <SeoHead
+        title={title ? `${title} | Ideora` : 'Workspace | Ideora'}
+        description="Private Ideora builder workspace for managing ideas, collaborations, messages, and account settings."
+        canonicalPath={location.pathname}
+        noindex
+      />
       {/* 1. Desktop Persistent Left Sidebar (Hidden on mobile <768px) */}
       <DesktopSidebar
         unreadNotificationsCount={unreadCount}

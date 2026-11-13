@@ -1,10 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 export const NotFoundPage: React.FC = () => {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-4 text-center bg-surface-soft">
+      <SeoHead
+        title="404 — Page Not Found | Ideora"
+        description="The page you are looking for does not exist on Ideora."
+        noindex
+      />
       <span className="rounded-full bg-brand-ice border border-brand-pale px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-brand-royal">
         404 Not Found
       </span>

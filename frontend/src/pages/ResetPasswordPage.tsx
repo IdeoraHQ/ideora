@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/services/supabase/client';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { updateUserPassword } from '@/services/api';
 
 export const ResetPasswordPage: React.FC = () => {
@@ -123,6 +124,12 @@ export const ResetPasswordPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-surface-soft flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8 font-sans">
       {/* Top Branding Bar */}
+      <SeoHead
+        title="Set New Password | Ideora"
+        description="Set a new password for your Ideora account."
+        canonicalPath="/reset-password"
+        noindex
+      />
       <header className="mx-auto w-full max-w-xl flex items-center justify-between pb-4">
         <Link to="/" className="flex items-center gap-2.5 group" title="Return to IDEORA">
           <div className="text-brand-royal group-hover:scale-105 transition-transform">

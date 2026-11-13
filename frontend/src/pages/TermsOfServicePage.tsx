@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, ShieldCheck, ArrowRight, Mail } from 'lucide-react';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 interface TermsSection {
   id: string;
@@ -225,6 +226,11 @@ const sections: TermsSection[] = [
 export const TermsOfServicePage: React.FC = () => {
   return (
     <div className="bg-surface-soft py-12 sm:py-16">
+      <SeoHead
+        title="Terms of Service | Ideora"
+        description="Review the Ideora Terms of Service governing idea publishing, collaboration, user conduct, and platform usage."
+        canonicalPath="/terms"
+      />
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="rounded-2xl border border-surface-border bg-surface-white p-6 sm:p-10 shadow-sm">

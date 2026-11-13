@@ -7,36 +7,40 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IDEORA — Where Ideas Find Their Builders</title>
+    <title>Ideora — Where Unfinished Ideas Find Their Builders</title>
     <meta
       name="description"
-      content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
+      content="Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora."
+    />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1"
     />
     <link rel="canonical" href="https://ideorahq.top/" />
 
     <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="IDEORA" />
+    <meta property="og:site_name" content="Ideora" />
     <meta property="og:url" content="https://ideorahq.top/" />
-    <meta property="og:title" content="IDEORA — Where Ideas Find Their Builders" />
+    <meta property="og:title" content="Ideora — Where Unfinished Ideas Find Their Builders" />
     <meta
       property="og:description"
-      content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
+      content="Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora."
     />
     <meta property="og:image" content="https://ideorahq.top/og-image.png" />
     <meta property="og:image:secure_url" content="https://ideorahq.top/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1024" />
     <meta property="og:image:height" content="541" />
-    <meta property="og:image:alt" content="IDEORA — Where Ambitious Ideas Find Their Builders" />
+    <meta property="og:image:alt" content="Ideora — Where ideas find their builders" />
 
     <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@IdeoraHQ" />
-    <meta name="twitter:title" content="IDEORA — Where Ideas Find Their Builders" />
+    <meta name="twitter:title" content="Ideora — Where Unfinished Ideas Find Their Builders" />
     <meta
       name="twitter:description"
-      content="The venture-grade co-founding and idea-adoption network. Discover promising initiatives, assemble senior engineering teams, and build real-world software."
+      content="Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora."
     />
     <meta name="twitter:image" content="https://ideorahq.top/og-image.png" />
 
@@ -44,15 +48,39 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "IDEORA",
-        "url": "https://ideorahq.top/",
-        "description": "Where ambitious ideas find their builders. Co-founding and idea-adoption network.",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://ideorahq.top/explore?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://ideorahq.top/#organization",
+            "name": "Ideora",
+            "alternateName": "IDEORA",
+            "url": "https://ideorahq.top/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://ideorahq.top/brand/ideora-logo.png"
+            },
+            "sameAs": [
+              "https://github.com/IdeoraHQ/ideora",
+              "https://discord.gg/SwaJqVftV"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://ideorahq.top/#website",
+            "name": "Ideora",
+            "alternateName": "IDEORA",
+            "url": "https://ideorahq.top/",
+            "description": "Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora.",
+            "publisher": {
+              "@id": "https://ideorahq.top/#organization"
+            },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://ideorahq.top/explore?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
       }
     </script>
     <!-- Font Preconnect & Outfit Family -->
@@ -66,6 +94,20 @@
   </head>
   <body class="bg-[#F8FAFC] font-sans text-[#1E293B] antialiased selection:bg-[#2563EB] selection:text-white">
     <div id="root"></div>
+    <noscript>
+      <main style="max-width:720px;margin:48px auto;padding:0 20px;font-family:sans-serif;line-height:1.6;">
+        <h1>Ideora — Where Unfinished Ideas Find Their Builders</h1>
+        <p>
+          Discover unfinished ideas, connect with people who share your interests, and collaborate to bring promising projects to life on Ideora.
+        </p>
+        <p>
+          Please enable JavaScript to use the interactive Ideora application, or visit our
+          <a href="/explore">Explore Ideas</a>,
+          <a href="/privacy">Privacy Policy</a>, and
+          <a href="/terms">Terms of Service</a> pages.
+        </p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

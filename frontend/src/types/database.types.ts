@@ -687,6 +687,18 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      platform_settings: {
+        Row: {
+          key: string;
+          value: Json;
+          description: string;
+          updated_by: string | null;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -874,6 +886,14 @@ export interface Database {
       cancel_account_deletion_request: {
         Args: Record<string, never>;
         Returns: Database['public']['Tables']['account_deletion_requests']['Row'];
+      };
+      admin_update_platform_setting: {
+        Args: {
+          p_key: string;
+          p_value: Json;
+          p_reason?: string | null;
+        };
+        Returns: Database['public']['Tables']['platform_settings']['Row'];
       };
     };
     Enums: {

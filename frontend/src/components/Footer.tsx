@@ -14,9 +14,9 @@ export const Footer: React.FC = () => {
               <IdeoraLogo size={40} />
             </div>
             <div>
-              <h3 className="text-2xl font-light tracking-tight text-white font-heading">
+              <p className="text-2xl font-light tracking-tight text-white font-heading">
                 IDEORA
-              </h3>
+              </p>
               <p className="text-sm font-normal text-brand-pale">
                 Where ideas find their builders.
               </p>
@@ -67,6 +67,20 @@ export const Footer: React.FC = () => {
         <div className="mt-8 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-pale/70">
           <p>&copy; {new Date().getFullYear()} IDEORA. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/"
+              className="text-brand-pale hover:text-white transition-colors"
+            >
+              Home
+            </Link>
+            <span aria-hidden="true">&bull;</span>
+            <Link
+              to="/explore"
+              className="text-brand-pale hover:text-white transition-colors"
+            >
+              Explore Ideas
+            </Link>
+            <span aria-hidden="true">&bull;</span>
             <Link
               to="/privacy"
               className="text-brand-pale hover:text-white transition-colors"

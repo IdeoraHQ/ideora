@@ -19,6 +19,12 @@ import { AdminRoute } from '@/components/auth/AdminRoute';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage';
 import { AdminFeedbackPage } from '@/pages/admin/AdminFeedbackPage';
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
+import { AdminIdeasPage } from '@/pages/admin/AdminIdeasPage';
+import { AdminReportsPage } from '@/pages/admin/AdminReportsPage';
+import { AdminProjectsPage } from '@/pages/admin/AdminProjectsPage';
+import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
+import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
 import { FeedbackPage } from '@/pages/FeedbackPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
@@ -83,6 +89,12 @@ export const AppRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route index element={<AdminOverviewPage />} />
           <Route path="feedback" element={<AdminFeedbackPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="ideas" element={<AdminIdeasPage />} />
+          <Route path="reports" element={<AdminReportsPage />} />
+          <Route path="projects" element={<AdminProjectsPage />} />
+          <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Route>
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { createIdea } from '@/services/api';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { CustomSelect } from '@/components/common';
 import type { CollaborationType, IdeaStatus, SkillCategory } from '@/types';
 
@@ -210,6 +211,12 @@ export const CreateIdeaPage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <SeoHead
+        title="Publish an Idea | Ideora"
+        description="Publish an unfinished idea and invite collaborators on Ideora."
+        canonicalPath="/ideas/new"
+        noindex
+      />
       <Link
         to="/explore"
         className="inline-flex items-center gap-1.5 text-xs font-bold text-typography-slate hover:text-brand-royal mb-6"

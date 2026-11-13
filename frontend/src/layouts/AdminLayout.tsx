@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
 
@@ -44,38 +45,38 @@ const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {
     label: 'Users',
     description: 'Accounts, roles and status',
+    to: '/admin/users',
     icon: Users,
-    planned: true,
   },
   {
     label: 'Idea moderation',
     description: 'Review and manage submissions',
+    to: '/admin/ideas',
     icon: Lightbulb,
-    planned: true,
   },
   {
     label: 'Reports',
     description: 'Investigate complaints',
+    to: '/admin/reports',
     icon: Flag,
-    planned: true,
   },
   {
     label: 'Projects',
     description: 'Monitor collaborations',
+    to: '/admin/projects',
     icon: FolderGit2,
-    planned: true,
   },
   {
     label: 'Audit logs',
     description: 'Track administrative actions',
+    to: '/admin/audit-logs',
     icon: ScrollText,
-    planned: true,
   },
   {
     label: 'Settings',
     description: 'Platform configuration',
+    to: '/admin/settings',
     icon: Settings,
-    planned: true,
   },
 ];
 
@@ -150,6 +151,12 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-surface-soft text-typography-charcoal font-sans">
+      <SeoHead
+        title="Admin Control Center | Ideora"
+        description="Private Ideora administrative control center."
+        canonicalPath="/admin"
+        noindex
+      />
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-68 lg:w-72 border-r border-surface-border bg-surface-white shrink-0 select-none z-30">
         <div className="flex h-16 items-center justify-between px-4 border-b border-surface-border">

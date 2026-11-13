@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SeoHead } from '@/components/seo/SeoHead';
 import {
   fetchProfile,
   updateCurrentProfile,
@@ -212,6 +213,11 @@ export const ProfilePage: React.FC = () => {
   if (!viewedProfile) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
+        <SeoHead
+          title="Builder Profile Not Found | Ideora"
+          description="The requested builder profile could not be found on Ideora."
+          noindex
+        />
         <div className="rounded-3xl border border-surface-border bg-surface-white p-10 shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-ice text-brand-royal mb-4">
             <Users className="h-7 w-7" />
@@ -237,6 +243,16 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-soft pb-24">
+      <SeoHead
+        title={`${viewedProfile.full_name || viewedProfile.username} (@${viewedProfile.username}) | Ideora`}
+        description={
+          viewedProfile.bio ||
+          `View ${viewedProfile.full_name || viewedProfile.username}'s published ideas and collaboration profile on Ideora.`
+        }
+        canonicalPath={`/profile/${viewedProfile.username}`}
+        noindex={!username}
+        ogType="profile"
+      />
       {/* 1. Clean Navigation Bar (No overlapping background) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4 flex items-center justify-between">
         <button

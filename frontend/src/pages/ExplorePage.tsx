@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { PlusCircle, Filter } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { fetchPublishedIdeas, toggleIdeaUpvote, fetchUserUpvotedIdeaIds } from '@/services/api';
 import type { Idea } from '@/types';
 import {
@@ -182,6 +183,11 @@ export const ExplorePage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      <SeoHead
+        title="Explore Unfinished Ideas & Collaboration Projects | Ideora"
+        description="Browse unfinished ideas, active initiatives, and open collaboration roles on Ideora. Filter by category, skills, and collaboration type to find your next project."
+        canonicalPath="/explore"
+      />
       {/* 1. Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border/80 pb-6">
         <div className="max-w-2xl">

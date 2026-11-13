@@ -33,6 +33,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { CustomSelect } from '@/components/common';
 import {
   fetchIdeaBySlug,
@@ -465,6 +466,30 @@ export const IdeaDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-soft pb-24">
+      <SeoHead
+        title={`${idea.title} | Ideora`}
+        description={(idea.summary || idea.description || '').slice(0, 160)}
+        canonicalPath={`/ideas/${idea.slug}`}
+        ogType="article"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: idea.title,
+          description: idea.summary || idea.description,
+          url: `https://ideorahq.top/ideas/${idea.slug}`,
+          ...(idea.created_at ? { datePublished: idea.created_at } : {}),
+          ...(idea.updated_at ? { dateModified: idea.updated_at } : {}),
+          ...(idea.author?.username
+            ? {
+                author: {
+                  '@type': 'Person',
+                  name: idea.author.full_name || idea.author.username,
+                  url: `https://ideorahq.top/profile/${idea.author.username}`,
+                },
+              }
+            : {}),
+        }}
+      />
       {/* 1. Header & Breadcrumb Strip */}
       <div className="border-b border-surface-border bg-surface-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">

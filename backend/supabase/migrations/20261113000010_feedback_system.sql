@@ -501,8 +501,8 @@ BEGIN
     END IF;
 
     SELECT * INTO v_acting_admin
-    FROM public.profiles
-    WHERE id = v_admin_id;
+    FROM public.profiles p
+    WHERE p.id = v_admin_id;
 
     IF NOT FOUND
        OR v_acting_admin.role != 'admin'::public.user_role
@@ -576,8 +576,8 @@ BEGIN
     END IF;
 
     SELECT * INTO v_acting_admin
-    FROM public.profiles
-    WHERE id = v_admin_id;
+    FROM public.profiles p
+    WHERE p.id = v_admin_id;
 
     IF NOT FOUND
        OR v_acting_admin.role != 'admin'::public.user_role

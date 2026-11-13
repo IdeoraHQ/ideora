@@ -1,10 +1,15 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 Disallow: /dashboard
 Disallow: /messages
 Disallow: /notifications
 Disallow: /settings
+Disallow: /projects
+Disallow: /feedback
+Disallow: /ideas/new
+Disallow: /auth
+Disallow: /forgot-password
 Disallow: /reset-password
 
 Sitemap: https://ideorahq.top/sitemap.xml
-
