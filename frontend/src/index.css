@@ -65,10 +65,78 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+
+  /* Brand */
+  --color-brand-royal: 37 99 235;
+  --color-brand-deep: 29 78 216;
+  --color-brand-light: 96 165 250;
+  --color-brand-pale: 219 234 254;
+  --color-brand-ice: 239 246 255;
+
+  /* Surfaces */
+  --color-surface-white: 255 255 255;
+  --color-surface-soft: 248 250 252;
+  --color-surface-light: 241 245 249;
+  --color-surface-tint: 240 247 255;
+  --color-surface-border: 226 232 240;
+
+  /* Typography */
+  --color-typography-navy: 20 33 61;
+  --color-typography-charcoal: 30 41 59;
+  --color-typography-slate: 100 116 139;
+  --color-typography-muted: 148 163 184;
+  --color-typography-white: 255 255 255;
+
+  /* Functional */
+  --color-functional-success: 22 163 74;
+  --color-functional-success-light: 220 252 231;
+  --color-functional-warning: 245 158 11;
+  --color-functional-warning-light: 254 243 199;
+  --color-functional-error: 220 38 38;
+  --color-functional-error-light: 254 226 226;
+  --color-functional-info: 2 132 199;
+}
+
+html.dark,
+html[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+
+  /* Brand (Royal Blue preserved, tuned for dark-navy contrast) */
+  --color-brand-royal: 59 130 246;
+  --color-brand-deep: 37 99 235;
+  --color-brand-light: 96 165 250;
+  --color-brand-pale: 30 58 138;
+  --color-brand-ice: 23 37 84;
+
+  /* Sophisticated Dark Navy / Charcoal Surfaces */
+  --color-surface-soft: 11 17 32;
+  --color-surface-white: 17 24 39;
+  --color-surface-light: 30 41 59;
+  --color-surface-tint: 15 23 42;
+  --color-surface-border: 39 51 73;
+
+  /* High-Contrast Readable Typography */
+  --color-typography-navy: 241 245 249;
+  --color-typography-charcoal: 226 232 240;
+  --color-typography-slate: 148 163 184;
+  --color-typography-muted: 100 116 139;
+  --color-typography-white: 255 255 255;
+
+  /* Functional (Deep tinted badges for dark mode) */
+  --color-functional-success: 34 197 94;
+  --color-functional-success-light: 20 83 45;
+  --color-functional-warning: 251 191 36;
+  --color-functional-warning-light: 120 53 15;
+  --color-functional-error: 248 113 113;
+  --color-functional-error-light: 127 29 29;
+  --color-functional-info: 56 189 248;
+}
+
 @layer base {
-  :root {
-    --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
 
   html {
     font-family: var(--font-outfit);
@@ -80,8 +148,8 @@
 
   body {
     min-height: 100vh;
-    background-color: #F8FAFC;
-    color: #1E293B;
+    background-color: rgb(var(--color-surface-soft));
+    color: rgb(var(--color-typography-charcoal));
     font-family: var(--font-outfit);
     letter-spacing: -0.01em;
     line-height: 1.6;
@@ -90,6 +158,25 @@
     -moz-osx-font-smoothing: grayscale;
     overflow-wrap: break-word;
     word-break: normal;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgb(var(--color-brand-royal));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Hierarchy defaults */

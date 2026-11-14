@@ -31,7 +31,9 @@ export async function fetchUserConversations(): Promise<{
           id,
           status,
           message,
-          role_id
+          role_id,
+          request_type,
+          purpose
         )
       `)
       .or(`creator_id.eq.${user.id},requester_id.eq.${user.id}`)
@@ -120,7 +122,9 @@ export async function fetchConversationById(
           id,
           status,
           message,
-          role_id
+          role_id,
+          request_type,
+          purpose
         )
       `)
       .eq('id', conversationId)

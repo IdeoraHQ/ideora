@@ -11,7 +11,7 @@ export type AccountStatus = 'active' | 'suspended' | 'banned';
 export type IdeaStatus = 'draft' | 'seeking_collaborators' | 'in_progress' | 'launched' | 'archived';
 export type IdeaModerationStatus = 'approved' | 'pending_review' | 'rejected' | 'removed';
 export type CollaborationType = 'co_founder' | 'contributor' | 'advisor' | 'open_source';
-export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
+export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn' | 'role_filled';
 export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived';
 export type ProjectMemberRole = 'owner' | 'collaborator';
 export type ReportTargetType = 'idea' | 'comment' | 'profile' | 'project';
@@ -30,10 +30,12 @@ export type NotificationType =
   | 'collaboration_request'
   | 'request_accepted'
   | 'request_declined'
+  | 'role_filled'
   | 'new_comment'
   | 'idea_upvoted'
   | 'new_message'
   | 'feedback_updated';
+export type ThemePreference = 'light' | 'dark' | 'system';
 
 export interface Database {
   public: {
@@ -46,6 +48,11 @@ export interface Database {
           avatar_url: string | null;
           bio: string | null;
           skills: string[];
+          interests: string[];
+          preferred_roles: string[];
+          looking_to_contribute: string | null;
+          collaboration_goals: string | null;
+          is_discoverable: boolean;
           github_url: string | null;
           linkedin_url: string | null;
           website_url: string | null;
@@ -60,6 +67,11 @@ export interface Database {
           avatar_url?: string | null;
           bio?: string | null;
           skills?: string[];
+          interests?: string[];
+          preferred_roles?: string[];
+          looking_to_contribute?: string | null;
+          collaboration_goals?: string | null;
+          is_discoverable?: boolean;
           github_url?: string | null;
           linkedin_url?: string | null;
           website_url?: string | null;
@@ -74,6 +86,11 @@ export interface Database {
           avatar_url?: string | null;
           bio?: string | null;
           skills?: string[];
+          interests?: string[];
+          preferred_roles?: string[];
+          looking_to_contribute?: string | null;
+          collaboration_goals?: string | null;
+          is_discoverable?: boolean;
           github_url?: string | null;
           linkedin_url?: string | null;
           website_url?: string | null;
@@ -185,9 +202,13 @@ export interface Database {
       collaboration_requests: {
         Row: {
           id: string;
-          idea_id: string;
+          idea_id: string | null;
           role_id: string | null;
           requester_id: string;
+          recipient_id: string | null;
+          request_type: 'idea_based' | 'general';
+          purpose: string | null;
+          skills_offered: string[];
           message: string;
           status: RequestStatus;
           created_at: string;
@@ -195,9 +216,13 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          idea_id: string;
+          idea_id?: string | null;
           role_id?: string | null;
           requester_id: string;
+          recipient_id?: string | null;
+          request_type?: 'idea_based' | 'general';
+          purpose?: string | null;
+          skills_offered?: string[];
           message: string;
           status?: RequestStatus;
           created_at?: string;
@@ -205,9 +230,13 @@ export interface Database {
         };
         Update: {
           id?: string;
-          idea_id?: string;
+          idea_id?: string | null;
           role_id?: string | null;
           requester_id?: string;
+          recipient_id?: string | null;
+          request_type?: 'idea_based' | 'general';
+          purpose?: string | null;
+          skills_offered?: string[];
           message?: string;
           status?: RequestStatus;
           created_at?: string;
@@ -300,7 +329,7 @@ export interface Database {
         Row: {
           id: string;
           collaboration_request_id: string;
-          idea_id: string;
+          idea_id: string | null;
           creator_id: string;
           requester_id: string;
           created_at: string;
@@ -310,7 +339,7 @@ export interface Database {
         Insert: {
           id?: string;
           collaboration_request_id: string;
-          idea_id: string;
+          idea_id?: string | null;
           creator_id: string;
           requester_id: string;
           created_at?: string;
@@ -320,7 +349,7 @@ export interface Database {
         Update: {
           id?: string;
           collaboration_request_id?: string;
-          idea_id?: string;
+          idea_id?: string | null;
           creator_id?: string;
           requester_id?: string;
           created_at?: string;
@@ -656,6 +685,7 @@ export interface Database {
           notify_messages: boolean;
           notify_idea_activity: boolean;
           notify_platform_announcements: boolean;
+          theme_preference: ThemePreference;
           created_at: string;
           updated_at: string;
         };
@@ -665,12 +695,14 @@ export interface Database {
           notify_messages?: boolean;
           notify_idea_activity?: boolean;
           notify_platform_announcements?: boolean;
+          theme_preference?: ThemePreference;
         };
         Update: {
           notify_collaboration_requests?: boolean;
           notify_messages?: boolean;
           notify_idea_activity?: boolean;
           notify_platform_announcements?: boolean;
+          theme_preference?: ThemePreference;
           updated_at?: string;
         };
         Relationships: [];

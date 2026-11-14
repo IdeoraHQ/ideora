@@ -211,10 +211,10 @@ const sections: TermsSection[] = [
           For questions about these Terms of Service, moderation decisions, or legal
           enquiries, contact us at{' '}
           <a
-            href="mailto:support@ideorahq.top"
+            href="mailto:hello@ideorahq.top"
             className="font-semibold text-brand-royal hover:underline"
           >
-            support@ideorahq.top
+            hello@ideorahq.top
           </a>
           .
         </p>
@@ -285,11 +285,11 @@ export const TermsOfServicePage: React.FC = () => {
 
             <div className="mt-5 border-t border-surface-border pt-4">
               <a
-                href="mailto:support@ideorahq.top"
+                href="mailto:hello@ideorahq.top"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-brand-royal hover:underline"
               >
                 <Mail className="h-3.5 w-3.5" />
-                support@ideorahq.top
+                hello@ideorahq.top
               </a>
             </div>
           </aside>

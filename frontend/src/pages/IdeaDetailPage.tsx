@@ -35,6 +35,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { SeoHead } from '@/components/seo/SeoHead';
 import { CustomSelect } from '@/components/common';
+import { supabase } from '@/services/supabase/client';
 import {
   fetchIdeaBySlug,
   toggleIdeaUpvote,
@@ -148,19 +149,82 @@ export const IdeaDetailPage: React.FC = () => {
     void loadIdeaData();
   }, [loadIdeaData, profile?.id]);
 
+  // Keep role availability and application statuses synchronized with Supabase in real time
+  useEffect(() => {
+    if (!idea?.id) return;
+
+    const channel = supabase
+      .channel(`idea-collab-${idea.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'collaboration_requests',
+          filter: `idea_id=eq.${idea.id}`,
+        },
+        () => {
+          void loadIdeaData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'idea_roles_needed',
+          filter: `idea_id=eq.${idea.id}`,
+        },
+        () => {
+          void loadIdeaData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [idea?.id, loadIdeaData]);
+
   // Ownership & Roles Calculations (declared safely at top level)
   const isCreator = Boolean(profile && idea && profile.id === idea.creator_id);
 
-  const myExistingRequest = useMemo(() => {
-    if (!profile || !requests.length) return null;
-    return (
-      requests.find(
-        (r) => r.requester_id === profile.id && r.status !== 'withdrawn'
-      ) || null
+  const myRequests = useMemo(() => {
+    if (!profile || !requests.length) return [];
+    return requests.filter(
+      (r) => r.requester_id === profile.id && r.status !== 'withdrawn'
     );
   }, [profile, requests]);
 
-  const hasAlreadyApplied = Boolean(myExistingRequest);
+  const myRequestsByRoleId = useMemo(() => {
+    const map = new Map<string, CollaborationRequest>();
+    for (const req of myRequests) {
+      if (req.role_id && !map.has(req.role_id)) {
+        map.set(req.role_id, req);
+      }
+    }
+    return map;
+  }, [myRequests]);
+
+  const myGeneralRequest = useMemo(
+    () => myRequests.find((r) => !r.role_id) || null,
+    [myRequests]
+  );
+
+  const hasOpenUnappliedRoles = useMemo(() => {
+    if (!idea?.rolesNeeded?.length) return false;
+    return idea.rolesNeeded.some(
+      (role) => role.spots_filled < role.spots_available && !myRequestsByRoleId.has(role.id)
+    );
+  }, [idea?.rolesNeeded, myRequestsByRoleId]);
+
+  const primaryMessageRequest = useMemo(() => {
+    return (
+      myRequests.find((r) => r.status === 'accepted') ||
+      myRequests.find((r) => r.status === 'pending') ||
+      null
+    );
+  }, [myRequests]);
 
   // Primary Action Button Label based on collaboration type
   const getPrimaryActionLabel = (type: string) => {
@@ -708,7 +772,10 @@ export const IdeaDetailPage: React.FC = () => {
             </div>
 
             {/* 3.2 Required Skills & Open Roles */}
-            <div className="rounded-3xl border border-surface-border bg-surface-white p-6 sm:p-8 shadow-2xs space-y-6">
+            <div
+              id="open-roles-section"
+              className="rounded-3xl border border-surface-border bg-surface-white p-6 sm:p-8 shadow-2xs space-y-6"
+            >
               <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-surface-border/70">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-light text-typography-navy flex items-center gap-2.5">
@@ -720,7 +787,7 @@ export const IdeaDetailPage: React.FC = () => {
                   </p>
                 </div>
 
-                {!isCreator && !hasAlreadyApplied && (
+                {!isCreator && !myGeneralRequest && (
                   <button
                     type="button"
                     onClick={() => openApplicationModal(null)}
@@ -765,7 +832,7 @@ export const IdeaDetailPage: React.FC = () => {
                 {idea.rolesNeeded && idea.rolesNeeded.length > 0 ? (
                   idea.rolesNeeded.map((role) => {
                     const isFull = role.spots_filled >= role.spots_available;
-                    const isMyRole = myExistingRequest?.role_id === role.id;
+                    const roleRequest = myRequestsByRoleId.get(role.id) || null;
 
                     return (
                       <div
@@ -799,15 +866,27 @@ export const IdeaDetailPage: React.FC = () => {
 
                         {!isCreator && (
                           <div className="shrink-0 self-start sm:self-auto">
-                            {isMyRole ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-ice px-4 py-2 text-xs font-semibold text-brand-royal">
-                                <Clock className="h-3.5 w-3.5" />
-                                Application Pending
-                              </span>
-                            ) : hasAlreadyApplied ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-light px-4 py-2 text-xs font-medium text-typography-muted">
-                                Request Submitted
-                              </span>
+                            {roleRequest ? (
+                              roleRequest.status === 'accepted' ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-xl bg-functional-success-light px-4 py-2 text-xs font-semibold text-functional-success">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Accepted
+                                </span>
+                              ) : roleRequest.status === 'declined' ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-xl bg-functional-error-light px-4 py-2 text-xs font-semibold text-functional-error">
+                                  <XCircle className="h-3.5 w-3.5" />
+                                  Declined
+                                </span>
+                              ) : roleRequest.status === 'role_filled' ? (
+                                <span className="inline-flex items-center rounded-xl bg-surface-light px-4 py-2 text-xs font-medium text-typography-muted">
+                                  Role Filled
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-ice px-4 py-2 text-xs font-semibold text-brand-royal">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  Application Pending
+                                </span>
+                              )
                             ) : isFull ? (
                               <span className="inline-flex items-center rounded-xl bg-surface-light px-4 py-2 text-xs font-medium text-typography-muted">
                                 Role Filled
@@ -1184,7 +1263,7 @@ export const IdeaDetailPage: React.FC = () => {
           </div>
 
           {/* ================= RIGHT SIDEBAR (4 cols) ================= */}
-          <div className="lg:col-span-4 min-w-0 max-w-full space-y-6">
+          <div className="lg:col-span-4 min-w-0 max-w-full space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* 4.1 Idea Engagement & Primary Action Card */}
             <div className="rounded-3xl border border-surface-border bg-surface-white p-6 shadow-2xs space-y-5">
               <div className="pb-3 border-b border-surface-border/70 flex items-center justify-between">
@@ -1256,56 +1335,95 @@ export const IdeaDetailPage: React.FC = () => {
                       />
                     </div>
                   </div>
-                ) : myExistingRequest ? (
-                  myExistingRequest.status === 'accepted' ? (
-                    <div className="rounded-2xl border border-functional-success/30 bg-functional-success-light/40 p-4 text-center space-y-2.5">
-                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-functional-success">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Accepted Team Member
+                ) : myRequests.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-surface-border bg-surface-soft p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-typography-muted">
+                          Your Applications ({myRequests.length})
+                        </span>
                       </div>
-                      <p className="text-[11px] text-typography-slate leading-relaxed">
-                        You are an official collaborator on this project. Coordinate directly with the founder.
-                      </p>
+
+                      <div className="space-y-2">
+                        {myRequests.map((req) => {
+                          const roleLabel = req.role?.role_title || 'General Collaboration';
+                          const statusBadge =
+                            req.status === 'accepted'
+                              ? {
+                                  label: 'Accepted',
+                                  cls: 'bg-functional-success-light text-functional-success',
+                                }
+                              : req.status === 'declined'
+                                ? {
+                                    label: 'Declined',
+                                    cls: 'bg-functional-error-light text-functional-error',
+                                  }
+                                : req.status === 'role_filled'
+                                  ? {
+                                      label: 'Role Filled',
+                                      cls: 'bg-surface-light text-typography-muted',
+                                    }
+                                  : {
+                                      label: 'Application Pending',
+                                      cls: 'bg-brand-ice text-brand-royal',
+                                    };
+
+                          return (
+                            <div
+                              key={req.id}
+                              className="flex items-center justify-between gap-2 rounded-xl border border-surface-border bg-surface-white px-3 py-2"
+                            >
+                              <span className="text-xs font-medium text-typography-navy truncate">
+                                {roleLabel}
+                              </span>
+                              <span
+                                className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusBadge.cls}`}
+                              >
+                                {statusBadge.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {primaryMessageRequest && (
+                        <button
+                          type="button"
+                          disabled={openingConversationId === primaryMessageRequest.id}
+                          onClick={() => handleOpenConversation(primaryMessageRequest.id)}
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-royal py-2.5 px-4 text-xs font-semibold text-white shadow-2xs hover:bg-brand-deep transition-all"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>
+                            {openingConversationId === primaryMessageRequest.id
+                              ? 'Opening...'
+                              : primaryMessageRequest.status === 'accepted'
+                                ? 'Message Idea Creator'
+                                : 'Message Founder'}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+
+                    {(hasOpenUnappliedRoles || (!idea.rolesNeeded?.length && !myGeneralRequest)) && (
                       <button
                         type="button"
-                        disabled={openingConversationId === myExistingRequest.id}
-                        onClick={() => handleOpenConversation(myExistingRequest.id)}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-royal py-2.5 px-4 text-xs font-semibold text-white shadow-2xs hover:bg-brand-deep transition-all"
+                        onClick={() => {
+                          if (hasOpenUnappliedRoles) {
+                            document
+                              .getElementById('open-roles-section')
+                              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          } else {
+                            openApplicationModal(null);
+                          }
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-brand-royal/30 bg-brand-ice py-2.5 px-4 text-xs font-semibold text-brand-royal hover:bg-brand-pale/60 transition-all"
                       >
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{openingConversationId === myExistingRequest.id ? 'Opening...' : 'Message Idea Creator'}</span>
+                        <Briefcase className="h-4 w-4" />
+                        {hasOpenUnappliedRoles ? 'Apply for Another Open Role' : getPrimaryActionLabel(idea.collaboration_type)}
                       </button>
-                    </div>
-                  ) : myExistingRequest.status === 'pending' ? (
-                    <div className="rounded-2xl border border-brand-pale bg-brand-ice/50 p-4 text-center space-y-2.5">
-                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-royal">
-                        <Clock className="h-4 w-4" />
-                        Application Under Review
-                      </div>
-                      <p className="text-[11px] text-typography-slate leading-relaxed">
-                        Your collaboration request is currently under founder review.
-                      </p>
-                      <button
-                        type="button"
-                        disabled={openingConversationId === myExistingRequest.id}
-                        onClick={() => handleOpenConversation(myExistingRequest.id)}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-brand-royal/30 bg-surface-white py-2.5 px-3 text-xs font-semibold text-brand-royal hover:bg-brand-ice/60 transition-all shadow-2xs"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span>{openingConversationId === myExistingRequest.id ? 'Opening...' : 'Message Founder'}</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-functional-error/30 bg-functional-error-light/40 p-4 text-center space-y-1.5">
-                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-functional-error">
-                        <XCircle className="h-4 w-4" />
-                        Application Declined
-                      </div>
-                      <p className="text-[11px] text-typography-slate leading-relaxed">
-                        This collaboration application was declined. You can explore other open initiatives.
-                      </p>
-                    </div>
-                  )
+                    )}
+                  </div>
                 ) : (
                   <button
                     type="button"

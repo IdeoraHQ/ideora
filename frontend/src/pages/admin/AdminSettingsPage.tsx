@@ -236,7 +236,7 @@ export const AdminSettingsPage: React.FC = () => {
                       handleMessageChange(setting.key, boolDraft, e.target.value)
                     }
                     placeholder="Maintenance banner message..."
-                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3.5 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-white focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3.5 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
                   />
                 )}
 
@@ -251,7 +251,7 @@ export const AdminSettingsPage: React.FC = () => {
                       }))
                     }
                     placeholder="Optional change reason (logged to audit trail)..."
-                    className="flex-1 rounded-xl border border-surface-border bg-surface-soft px-3.5 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-white focus:outline-none"
+                    className="flex-1 rounded-xl border border-surface-border bg-surface-soft px-3.5 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
                   />
                   <button
                     type="button"

@@ -4,6 +4,8 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/pages/HomePage';
 import { ExplorePage } from '@/pages/ExplorePage';
+import { PeoplePage } from '@/pages/PeoplePage';
+import { AboutPage } from '@/pages/AboutPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
@@ -43,6 +45,8 @@ export const AppRoutes: React.FC = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="explore" element={<ExplorePage />} />
+        <Route path="people" element={<PeoplePage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="ideas/new" element={<CreateIdeaPage />} />
         <Route path="ideas/:slug" element={<IdeaDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />

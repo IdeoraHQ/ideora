@@ -16,6 +16,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common';
 import { supabase } from '@/services/supabase/client';
 import {
   updateCurrentProfile,
@@ -67,6 +68,7 @@ export const SettingsPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
+  const [isDiscoverable, setIsDiscoverable] = useState(true);
   const [roleFocus, setRoleFocus] = useState<'founder' | 'collaborator'>('collaborator');
   const [githubUrl, setGithubUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
@@ -146,6 +148,7 @@ export const SettingsPage: React.FC = () => {
     setUsername(profile.username ?? '');
     setBio(profile.bio ?? '');
     setSkills(profile.skills ?? []);
+    setIsDiscoverable(profile.is_discoverable ?? true);
     setRoleFocus(profile.role === 'founder' ? 'founder' : 'collaborator');
     setGithubUrl(profile.github_url ?? '');
     setLinkedinUrl(profile.linkedin_url ?? '');
@@ -231,6 +234,7 @@ export const SettingsPage: React.FC = () => {
       username: cleanUsername,
       bio: bio.trim() || null,
       skills,
+      is_discoverable: isDiscoverable,
       github_url: githubUrl.trim() || null,
       linkedin_url: linkedinUrl.trim() || null,
       website_url: websiteUrl.trim() || null,
@@ -550,6 +554,35 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
+          {/* People Discovery Visibility */}
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-surface-border bg-surface-soft p-4">
+            <div>
+              <p className="text-xs font-bold text-typography-navy">
+                Appear in People Discovery
+              </p>
+              <p className="text-[11px] text-typography-slate mt-0.5">
+                Let other builders discover your skills and interests and send collaboration requests even if you have not published an idea.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isDiscoverable}
+              onClick={() => setIsDiscoverable((prev) => !prev)}
+              className={cn(
+                'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-royal/30',
+                isDiscoverable ? 'bg-brand-royal' : 'bg-surface-border'
+              )}
+            >
+              <span
+                className={cn(
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out',
+                  isDiscoverable ? 'translate-x-5' : 'translate-x-0'
+                )}
+              />
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-typography-navy mb-1.5">
@@ -791,7 +824,7 @@ export const SettingsPage: React.FC = () => {
             <button
               type="submit"
               disabled={updatingPassword || !newPassword}
-              className="inline-flex items-center gap-2 rounded-xl border border-brand-royal bg-white px-4 py-2 text-xs font-semibold text-brand-royal hover:bg-brand-ice/60 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-brand-royal bg-surface-white px-4 py-2 text-xs font-semibold text-brand-royal hover:bg-brand-ice/60 transition-colors disabled:opacity-50"
             >
               {updatingPassword && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -814,7 +847,20 @@ export const SettingsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Account Management */}
+      {/* 4. Appearance & Theme */}
+      <section className="rounded-2xl border border-surface-border bg-surface-white p-6 sm:p-8 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-typography-navy font-heading">
+            Appearance &amp; Theme
+          </h2>
+          <p className="mt-1 text-xs text-typography-slate">
+            Choose Light Mode, Dark Mode, or System Default to automatically match your device appearance.
+          </p>
+        </div>
+        <ThemeToggle variant="cards" />
+      </section>
+
+      {/* 5. Account Management */}
       <section className="rounded-2xl border border-surface-border bg-surface-white p-6 sm:p-8 shadow-sm space-y-5">
         <h2 className="text-lg font-semibold text-typography-navy font-heading">
           Account Management
@@ -866,14 +912,14 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {pendingDeletion ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 flex flex-wrap items-center justify-between gap-3">
+            <div className="rounded-xl border border-functional-warning/30 bg-functional-warning-light p-3.5 text-xs text-typography-navy flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="font-semibold">
                   Deletion request pending (submitted{' '}
                   {new Date(pendingDeletion.requested_at).toLocaleDateString()})
                 </p>
                 {pendingDeletion.reason && (
-                  <p className="mt-0.5 text-[11px]">
+                  <p className="mt-0.5 text-[11px] text-typography-slate">
                     Reason: {pendingDeletion.reason}
                   </p>
                 )}
@@ -882,7 +928,7 @@ export const SettingsPage: React.FC = () => {
                 type="button"
                 onClick={handleCancelDeletion}
                 disabled={processingDeletion}
-                className="rounded-lg bg-white border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                className="rounded-lg bg-surface-white border border-functional-warning/40 px-3 py-1.5 text-xs font-semibold text-typography-navy hover:bg-surface-soft disabled:opacity-60"
               >
                 Cancel Request
               </button>
@@ -895,7 +941,7 @@ export const SettingsPage: React.FC = () => {
                 value={deletionReason}
                 onChange={(e) => setDeletionReason(e.target.value)}
                 placeholder="Optional: tell us why you are leaving..."
-                className="w-full rounded-xl border border-surface-border bg-white p-3 text-xs text-typography-navy focus:border-functional-error focus:outline-none"
+                className="w-full rounded-xl border border-surface-border bg-surface-white p-3 text-xs text-typography-navy focus:border-functional-error focus:outline-none"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -912,7 +958,7 @@ export const SettingsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setConfirmDeleteOpen(false)}
-                  className="rounded-xl border border-surface-border bg-white px-4 py-2 text-xs font-semibold text-typography-slate hover:bg-surface-soft"
+                  className="rounded-xl border border-surface-border bg-surface-white px-4 py-2 text-xs font-semibold text-typography-slate hover:bg-surface-soft"
                 >
                   Cancel
                 </button>
@@ -922,7 +968,7 @@ export const SettingsPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setConfirmDeleteOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-functional-error/40 bg-white px-4 py-2 text-xs font-semibold text-functional-error hover:bg-functional-error hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-functional-error/40 bg-surface-white px-4 py-2 text-xs font-semibold text-functional-error hover:bg-functional-error hover:text-white transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Request Account Deletion</span>

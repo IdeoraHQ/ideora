@@ -55,6 +55,12 @@
             "name": "Ideora",
             "alternateName": "IDEORA",
             "url": "https://ideorahq.top/",
+            "email": "hello@ideorahq.top",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "hello@ideorahq.top"
+            },
             "logo": {
               "@type": "ImageObject",
               "url": "https://ideorahq.top/brand/ideora-logo.png"
@@ -93,8 +99,17 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
     />
+    <script>
+      (function () {
+        try {
+          var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', Boolean(isDark));
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#F8FAFC] font-sans text-[#1E293B] antialiased selection:bg-[#2563EB] selection:text-white">
+  <body class="bg-surface-soft font-sans text-typography-charcoal antialiased selection:bg-brand-royal selection:text-white">
     <div id="root"></div>
     <noscript>
       <main style="max-width:720px;margin:48px auto;padding:0 20px;font-family:sans-serif;line-height:1.6;">

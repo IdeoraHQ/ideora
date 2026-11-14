@@ -5,7 +5,7 @@ import { Github, MessageSquare } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-typography-navy text-typography-white py-12">
+    <footer className="bg-[#0F172A] text-white py-12 border-t border-surface-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Brand & Slogan */}
@@ -17,14 +17,14 @@ export const Footer: React.FC = () => {
               <p className="text-2xl font-light tracking-tight text-white font-heading">
                 IDEORA
               </p>
-              <p className="text-sm font-normal text-brand-pale">
+              <p className="text-sm font-normal text-slate-300">
                 Where ideas find their builders.
               </p>
             </div>
           </div>
 
           {/* Social Links from Palette Specification */}
-          <div className="flex items-center gap-5 text-brand-pale">
+          <div className="flex items-center gap-5 text-slate-300">
             <a
               href="https://x.com/Naijapins27"
               target="_blank"
@@ -78,33 +78,54 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-pale/70">
+        <div className="mt-8 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>&copy; {new Date().getFullYear()} IDEORA. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/"
-              className="text-brand-pale hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors"
             >
               Home
             </Link>
             <span aria-hidden="true">&bull;</span>
             <Link
               to="/explore"
-              className="text-brand-pale hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors"
             >
               Explore Ideas
             </Link>
             <span aria-hidden="true">&bull;</span>
             <Link
+              to="/people"
+              className="text-slate-300 hover:text-white transition-colors"
+            >
+              People
+            </Link>
+            <span aria-hidden="true">&bull;</span>
+            <Link
+              to="/about"
+              className="text-slate-300 hover:text-white transition-colors"
+            >
+              About
+            </Link>
+            <span aria-hidden="true">&bull;</span>
+            <a
+              href="mailto:hello@ideorahq.top"
+              className="text-slate-300 hover:text-white transition-colors"
+            >
+              Contact
+            </a>
+            <span aria-hidden="true">&bull;</span>
+            <Link
               to="/privacy"
-              className="text-brand-pale hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors"
             >
               Privacy Policy
             </Link>
             <span aria-hidden="true">&bull;</span>
             <Link
               to="/terms"
-              className="text-brand-pale hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors"
             >
               Terms of Service
             </Link>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { AppRoutes } from '@/routes';
 import { ContextualFeedbackPrompt } from '@/components/feedback/ContextualFeedbackPrompt';
 
@@ -13,8 +14,10 @@ export const App: React.FC = () => {
       }}
     >
       <AuthProvider>
-        <AppRoutes />
-        <ContextualFeedbackPrompt />
+        <ThemeProvider>
+          <AppRoutes />
+          <ContextualFeedbackPrompt />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

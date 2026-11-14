@@ -35,7 +35,7 @@ const MOD_BADGE: Record<IdeaModerationStatus, string> = {
   approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   pending_review: 'bg-amber-50 text-amber-700 border-amber-200',
   rejected: 'bg-rose-50 text-rose-700 border-rose-200',
-  removed: 'bg-slate-200 text-slate-700 border-slate-300',
+  removed: 'bg-surface-light text-typography-slate border-surface-border',
 };
 
 export const AdminIdeasPage: React.FC = () => {
@@ -329,7 +329,7 @@ export const AdminIdeasPage: React.FC = () => {
                   value={modReason}
                   onChange={(e) => setModReason(e.target.value)}
                   placeholder="Moderation reason (recorded in moderation history & audit log)..."
-                  className="w-full rounded-xl border border-surface-border bg-surface-soft p-3 text-xs text-typography-navy focus:border-brand-royal focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-soft p-3 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
                 />
                 {confirmOpen ? (
                   <div className="flex items-center gap-2">
@@ -346,7 +346,7 @@ export const AdminIdeasPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setConfirmOpen(false)}
-                      className="rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-semibold text-typography-slate"
+                      className="rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs font-semibold text-typography-slate"
                     >
                       Cancel
                     </button>

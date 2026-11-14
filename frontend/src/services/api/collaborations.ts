@@ -9,8 +9,16 @@ import type {
 type CollabRequestRow = Database['public']['Tables']['collaboration_requests']['Row'];
 type RequestStatus = Database['public']['Tables']['collaboration_requests']['Row']['status'];
 
+const COLLAB_SELECT = `
+  *,
+  requester:profiles!collaboration_requests_requester_id_fkey(*),
+  recipient:profiles!collaboration_requests_recipient_id_fkey(*),
+  idea:ideas(*),
+  role:idea_roles_needed(*)
+`;
+
 /**
- * Submit a request to collaborate on an idea
+ * Submit a request to collaborate on an idea OR directly with a person (idea-independent)
  */
 export async function submitCollaborationRequest(
   payload: SubmitCollaborationPayload
@@ -25,23 +33,40 @@ export async function submitCollaborationRequest(
       throw new Error('You must be signed in to request collaboration');
     }
 
+    const isIdeaBased = Boolean(payload.idea_id);
+    if (!isIdeaBased && !payload.recipient_id) {
+      throw new Error('Please select a recipient for your collaboration request.');
+    }
+
+    if (payload.recipient_id && payload.recipient_id === user.id) {
+      throw new Error('You cannot send a collaboration request to yourself.');
+    }
+
     const { data, error } = await supabase
       .from('collaboration_requests')
       .insert({
-        idea_id: payload.idea_id,
-        role_id: payload.role_id || null,
+        idea_id: payload.idea_id || null,
+        role_id: isIdeaBased ? payload.role_id || null : null,
+        recipient_id: payload.recipient_id || null,
+        request_type: isIdeaBased ? 'idea_based' : 'general',
+        purpose: payload.purpose?.trim() || (isIdeaBased ? null : 'General Collaboration'),
+        skills_offered: payload.skills_offered ?? [],
         requester_id: user.id,
         message: payload.message.trim(),
       })
-      .select(`
-        *,
-        requester:profiles(*),
-        idea:ideas(*),
-        role:idea_roles_needed(*)
-      `)
+      .select(COLLAB_SELECT)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error(
+          isIdeaBased
+            ? 'You have already submitted an application for this role.'
+            : 'You already have a pending collaboration request with this person.'
+        );
+      }
+      throw error;
+    }
     void recordFeedbackEngagement('meaningful_action', 0, 'collaboration_request');
     return { data: data as unknown as CollaborationRequest, error: null };
   } catch (err) {
@@ -58,12 +83,7 @@ export async function fetchIdeaRequests(
   try {
     const { data, error } = await supabase
       .from('collaboration_requests')
-      .select(`
-        *,
-        requester:profiles(*),
-        idea:ideas(*),
-        role:idea_roles_needed(*)
-      `)
+      .select(COLLAB_SELECT)
       .eq('idea_id', ideaId)
       .order('created_at', { ascending: false });
 
@@ -83,12 +103,7 @@ export async function fetchUserSentRequests(
   try {
     const { data, error } = await supabase
       .from('collaboration_requests')
-      .select(`
-        *,
-        requester:profiles(*),
-        idea:ideas(*),
-        role:idea_roles_needed(*)
-      `)
+      .select(COLLAB_SELECT)
       .eq('requester_id', userId)
       .order('created_at', { ascending: false });
 
@@ -100,33 +115,66 @@ export async function fetchUserSentRequests(
 }
 
 /**
- * Fetch incoming collaboration requests across all ideas created by a founder
+ * Fetch incoming collaboration requests (both idea-based for user's ideas AND direct general requests)
  */
 export async function fetchFounderIncomingRequests(
-  founderId: string
+  userId: string
 ): Promise<{ data: CollaborationRequest[] | null; error: Error | null }> {
   try {
     const { data: myIdeas } = await supabase
       .from('ideas')
       .select('id')
-      .eq('creator_id', founderId);
+      .eq('creator_id', userId);
 
     const ideaIds = (myIdeas || []).map((i) => i.id);
-    if (ideaIds.length === 0) return { data: [], error: null };
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('collaboration_requests')
-      .select(`
-        *,
-        requester:profiles(*),
-        idea:ideas(*),
-        role:idea_roles_needed(*)
-      `)
-      .in('idea_id', ideaIds)
+      .select(COLLAB_SELECT)
       .order('created_at', { ascending: false });
+
+    if (ideaIds.length > 0) {
+      query = query.or(`recipient_id.eq.${userId},idea_id.in.(${ideaIds.join(',')})`);
+    } else {
+      query = query.eq('recipient_id', userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return { data: (data as unknown as CollaborationRequest[]) || [], error: null };
+  } catch (err) {
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
+ * Check if there is an existing general (idea-independent) collaboration request
+ * between the authenticated user and targetUserId.
+ */
+export async function fetchGeneralRequestBetween(
+  targetUserId: string
+): Promise<{ data: CollaborationRequest | null; error: Error | null }> {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id === targetUserId) return { data: null, error: null };
+
+    const { data, error } = await supabase
+      .from('collaboration_requests')
+      .select(COLLAB_SELECT)
+      .is('idea_id', null)
+      .or(
+        `and(requester_id.eq.${user.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${user.id})`
+      )
+      .in('status', ['pending', 'accepted'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return { data: (data as unknown as CollaborationRequest) || null, error: null };
   } catch (err) {
     return { data: null, error: err as Error };
   }
@@ -159,6 +207,13 @@ export async function updateRequestStatus(
         } as unknown as CollabRequestRow,
         error: null,
       };
+    }
+
+    // Only fall back to direct update if the RPC function does not exist (PGRST202).
+    // Business-logic, concurrency, or authorization errors from the RPC must surface directly.
+    if (rpcError && rpcError.code !== 'PGRST202') {
+      console.error('[IDEORA] respond_to_collaboration_request RPC error:', rpcError);
+      throw new Error(rpcError.message || 'Failed to update collaboration request.');
     }
 
     // 2. If RPC does not exist (PGRST202) or threw, fall back to direct update

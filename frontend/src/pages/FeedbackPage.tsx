@@ -81,7 +81,7 @@ const STATUS_BADGE_MAP: Record<
   },
   declined: {
     label: 'Declined',
-    className: 'bg-slate-100 text-slate-600 border-slate-200',
+    className: 'bg-surface-light text-typography-slate border-surface-border',
   },
 };
 
@@ -539,7 +539,7 @@ export const FeedbackPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setScreenshotFile(null)}
-                        className="rounded-lg p-1 text-typography-slate hover:bg-white hover:text-functional-error"
+                        className="rounded-lg p-1 text-typography-slate hover:bg-surface-white hover:text-functional-error"
                         aria-label="Remove screenshot"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -654,16 +654,16 @@ export const FeedbackPage: React.FC = () => {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-semibold text-typography-navy border border-surface-border">
+                        <span className="rounded-md bg-surface-white px-2 py-0.5 text-[11px] font-semibold text-typography-navy border border-surface-border">
                           {TYPE_LABELS[item.feedback_type]}
                         </span>
                         {item.priority && (
-                          <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-typography-slate border border-surface-border capitalize">
+                          <span className="rounded-md bg-surface-white px-2 py-0.5 text-[11px] font-medium text-typography-slate border border-surface-border capitalize">
                             Priority: {item.priority}
                           </span>
                         )}
                         {item.category && (
-                          <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-typography-slate border border-surface-border">
+                          <span className="rounded-md bg-surface-white px-2 py-0.5 text-[11px] font-medium text-typography-slate border border-surface-border">
                             {item.category}
                           </span>
                         )}

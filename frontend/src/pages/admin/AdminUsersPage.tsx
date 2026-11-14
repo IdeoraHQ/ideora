@@ -371,7 +371,7 @@ export const AdminUsersPage: React.FC = () => {
                   value={roleReason}
                   onChange={(e) => setRoleReason(e.target.value)}
                   placeholder="Reason for role change (logged to audit trail)..."
-                  className="w-full rounded-xl border border-surface-border bg-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
                 />
                 {confirmRoleOpen ? (
                   <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export const AdminUsersPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setConfirmRoleOpen(false)}
-                      className="rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-semibold text-typography-slate"
+                      className="rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs font-semibold text-typography-slate"
                     >
                       Cancel
                     </button>
@@ -419,7 +419,7 @@ export const AdminUsersPage: React.FC = () => {
                     type="datetime-local"
                     value={suspendedUntil}
                     onChange={(e) => setSuspendedUntil(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
                   />
                 )}
                 <input
@@ -427,7 +427,7 @@ export const AdminUsersPage: React.FC = () => {
                   value={statusReason}
                   onChange={(e) => setStatusReason(e.target.value)}
                   placeholder="Reason for status change..."
-                  className="w-full rounded-xl border border-surface-border bg-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:outline-none"
                 />
                 {confirmStatusOpen ? (
                   <div className="flex items-center gap-2">
@@ -444,7 +444,7 @@ export const AdminUsersPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setConfirmStatusOpen(false)}
-                      className="rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-semibold text-typography-slate"
+                      className="rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs font-semibold text-typography-slate"
                     >
                       Cancel
                     </button>

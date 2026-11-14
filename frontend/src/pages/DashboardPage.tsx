@@ -507,7 +507,7 @@ export const DashboardPage: React.FC = () => {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Link
                           to={`/profile/${req.requester?.username || ''}`}
                           className="text-sm font-medium text-typography-navy hover:text-brand-royal"
@@ -515,32 +515,66 @@ export const DashboardPage: React.FC = () => {
                           {req.requester?.full_name || 'Builder'} (@{req.requester?.username})
                         </Link>
                         <span className="rounded-md bg-brand-ice px-2 py-0.5 text-xs font-semibold text-brand-royal">
-                          Role: {req.role?.role_title || 'General Collaborator'}
+                          {req.request_type === 'general' || !req.idea
+                            ? 'Direct Collaboration'
+                            : `Role: ${req.role?.role_title || 'General Collaborator'}`}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-xs text-typography-slate">
-                        Applied to idea:{' '}
-                        <Link
-                          to={`/ideas/${req.idea?.slug || ''}`}
-                          className="font-medium text-brand-royal hover:underline"
-                        >
-                          {req.idea?.title || 'Project'}
-                        </Link>
-                      </p>
+                      {req.idea ? (
+                        <p className="mt-0.5 text-xs text-typography-slate">
+                          Applied to idea:{' '}
+                          <Link
+                            to={`/ideas/${req.idea.slug}`}
+                            className="font-medium text-brand-royal hover:underline"
+                          >
+                            {req.idea.title}
+                          </Link>
+                        </p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-typography-slate">
+                          Purpose:{' '}
+                          <span className="font-medium text-typography-navy">
+                            {req.purpose || 'Direct Collaboration'}
+                          </span>
+                        </p>
+                      )}
                     </div>
 
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         req.status === 'accepted'
                           ? 'bg-functional-success-light text-functional-success'
                           : req.status === 'declined'
                             ? 'bg-functional-error-light text-functional-error'
-                            : 'bg-functional-warning-light text-functional-warning'
+                            : req.status === 'role_filled' || req.status === 'withdrawn'
+                              ? 'bg-surface-light text-typography-muted'
+                              : 'bg-functional-warning-light text-functional-warning'
                       }`}
                     >
-                      {req.status}
+                      {req.status === 'accepted'
+                        ? 'Accepted'
+                        : req.status === 'declined'
+                          ? 'Declined'
+                          : req.status === 'role_filled'
+                            ? 'Role Filled'
+                            : req.status === 'withdrawn'
+                              ? 'Withdrawn'
+                              : 'Application Pending'}
                     </span>
                   </div>
+
+                  {req.skills_offered && req.skills_offered.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {req.skills_offered.map((sk) => (
+                        <span
+                          key={sk}
+                          className="rounded-md border border-surface-border bg-surface-soft px-2 py-0.5 text-[11px] font-medium text-typography-navy"
+                        >
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   <p className="rounded-xl bg-surface-soft p-3 text-xs font-normal text-typography-charcoal border border-surface-border leading-relaxed">
                     {req.message}
@@ -633,34 +667,62 @@ export const DashboardPage: React.FC = () => {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <Link
-                        to={`/ideas/${req.idea?.slug || ''}`}
-                        className="text-base font-bold text-typography-navy hover:text-brand-royal transition-colors"
-                      >
-                        {req.idea?.title || 'Idea'}
-                      </Link>
-                      <p className="mt-0.5 text-xs text-typography-slate">
-                        Applied for:{' '}
-                        <span className="font-bold text-brand-royal">
-                          {req.role?.role_title || 'General Collaborator'}
-                        </span>
-                      </p>
+                      {req.idea ? (
+                        <>
+                          <Link
+                            to={`/ideas/${req.idea.slug}`}
+                            className="text-base font-bold text-typography-navy hover:text-brand-royal transition-colors"
+                          >
+                            {req.idea.title}
+                          </Link>
+                          <p className="mt-0.5 text-xs text-typography-slate">
+                            Applied for:{' '}
+                            <span className="font-bold text-brand-royal">
+                              {req.role?.role_title || 'General Collaborator'}
+                            </span>
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            to={`/profile/${req.recipient?.username || ''}`}
+                            className="text-base font-bold text-typography-navy hover:text-brand-royal transition-colors"
+                          >
+                            {req.recipient?.full_name || req.recipient?.username || 'Builder'}
+                            {req.recipient?.username ? ` (@${req.recipient.username})` : ''}
+                          </Link>
+                          <p className="mt-0.5 text-xs text-typography-slate">
+                            Direct request:{' '}
+                            <span className="font-bold text-brand-royal">
+                              {req.purpose || 'Direct Collaboration'}
+                            </span>
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
                           req.status === 'accepted'
                             ? 'bg-functional-success-light text-functional-success'
                             : req.status === 'declined'
                               ? 'bg-functional-error-light text-functional-error'
-                              : req.status === 'withdrawn'
+                              : req.status === 'withdrawn' || req.status === 'role_filled'
                                 ? 'bg-surface-light text-typography-muted'
                                 : 'bg-functional-warning-light text-functional-warning'
                         }`}
                       >
                         <Clock className="h-3 w-3" />
-                        {req.status}
+                        {req.status === 'accepted'
+                          ? 'Accepted'
+                          : req.status === 'declined'
+                            ? 'Declined'
+                            : req.status === 'role_filled'
+                              ? 'Role Filled'
+                              : req.status === 'withdrawn'
+                                ? 'Withdrawn'
+                                : 'Application Pending'}
                       </span>
 
                       {(req.status === 'pending' || req.status === 'accepted') && (

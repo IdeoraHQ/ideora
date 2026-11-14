@@ -18,6 +18,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common';
 import {
   fetchUserNotifications,
   markNotificationAsRead,
@@ -161,6 +162,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       {/* Right: Actions, Notifications & Profile */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="hidden md:inline-flex">
+          <ThemeToggle variant="compact" />
+        </div>
         {/* Quick Publish for tablets/mobile header */}
         <Link
           to="/ideas/new"
@@ -170,20 +174,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <span>New Idea</span>
         </Link>
 
-        {/* Mobile Projects Shortcut (since DesktopSidebar is hidden on <md) */}
-        <Link
-          to="/projects"
-          className="md:hidden relative rounded-xl p-2 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
-          aria-label="Projects Hub"
-          title="Projects Hub"
-        >
-          <FolderGit2 className="h-5 w-5" />
-        </Link>
-
-        {/* Direct Messages Link */}
+        {/* Direct Messages Link (desktop; mobile uses More drawer in bottom nav) */}
         <Link
           to="/messages"
-          className="relative rounded-xl p-2 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
+          className="hidden md:inline-flex relative rounded-xl p-2 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
           aria-label="Direct Messages"
           title="Direct Messages"
         >
@@ -311,13 +305,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           )}
         </div>
 
-        {/* User Profile Dropdown */}
+        {/* User Profile: direct link on small screens, dropdown on md+ */}
         {profile ? (
           <div className="relative" ref={userMenuRef}>
-            <button
-              type="button"
-              onClick={() => setIsUserMenuOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft p-1 sm:px-2.5 sm:py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+            <Link
+              to={profile.username ? `/profile/${profile.username}` : '/profile'}
+              className="md:hidden flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft p-1 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+              aria-label="My Profile"
             >
               {profile.avatar_url ? (
                 <img
@@ -330,13 +324,31 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   {profile.full_name?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
-              <span className="hidden sm:inline max-w-[110px] truncate text-left">
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setIsUserMenuOpen((prev) => !prev)}
+              className="hidden md:flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft p-1 sm:px-2.5 sm:py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+            >
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="h-7 w-7 rounded-lg object-cover border border-surface-border shadow-sm shrink-0"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-royal text-white text-xs font-bold shadow-sm shrink-0">
+                  {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
+              <span className="max-w-[110px] truncate text-left">
                 {profile.full_name}
               </span>
             </button>
 
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-surface-border bg-surface-white py-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="hidden md:block absolute right-0 mt-2 w-56 rounded-2xl border border-surface-border bg-surface-white py-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="border-b border-surface-border px-4 py-2.5">
                   <p className="text-xs font-medium text-typography-navy truncate">
                     {profile.full_name}

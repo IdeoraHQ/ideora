@@ -49,7 +49,7 @@ const STATUS_STYLE: Record<FeedbackStatus, string> = {
   planned: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   in_progress: 'bg-sky-50 text-sky-700 border-sky-200',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  declined: 'bg-slate-100 text-slate-600 border-slate-200',
+  declined: 'bg-surface-light text-typography-slate border-surface-border',
 };
 
 export const AdminFeedbackPage: React.FC = () => {

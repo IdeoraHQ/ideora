@@ -195,6 +195,13 @@ export const NotificationsPage: React.FC = () => {
           badgeText: 'Application Update',
           actionText: 'View Idea',
         };
+      case 'role_filled':
+        return {
+          icon: XCircle,
+          bg: 'bg-surface-soft text-typography-slate border-surface-border',
+          badgeText: 'Role Filled',
+          actionText: 'View Idea',
+        };
       case 'new_comment':
         return {
           icon: MessageSquare,

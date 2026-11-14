@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
+import { ThemeToggle } from '@/components/common';
 import { SeoHead } from '@/components/seo/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
@@ -249,6 +250,7 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle variant="compact" />
             <Link
               to="/dashboard"
               className="md:hidden inline-flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-soft px-3 py-1.5 text-xs font-semibold text-typography-navy hover:bg-surface-light"

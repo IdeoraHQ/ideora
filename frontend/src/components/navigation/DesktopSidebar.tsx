@@ -48,6 +48,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   }> = [
     { label: 'Overview', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Explore Ideas', to: '/explore', icon: Compass },
+    { label: 'People', to: '/people', icon: Users },
     { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
     { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Users },
     { label: 'Projects', to: '/projects', icon: FolderGit2 },

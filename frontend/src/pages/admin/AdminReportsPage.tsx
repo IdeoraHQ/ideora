@@ -38,7 +38,7 @@ const STATUS_BADGE: Record<ReportStatus, string> = {
   open: 'bg-rose-50 text-rose-700 border-rose-200',
   investigating: 'bg-amber-50 text-amber-700 border-amber-200',
   resolved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  dismissed: 'bg-slate-100 text-slate-600 border-slate-200',
+  dismissed: 'bg-surface-light text-typography-slate border-surface-border',
 };
 
 export const AdminReportsPage: React.FC = () => {
@@ -318,7 +318,7 @@ export const AdminReportsPage: React.FC = () => {
                     value={resolutionNotes}
                     onChange={(e) => setResolutionNotes(e.target.value)}
                     placeholder="Document investigation findings and action taken..."
-                    className="w-full rounded-xl border border-surface-border bg-surface-soft p-3 text-xs text-typography-navy focus:border-brand-royal focus:bg-white focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-soft p-3 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
                   />
                 </div>
 
@@ -337,7 +337,7 @@ export const AdminReportsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setConfirmOpen(false)}
-                      className="rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-semibold text-typography-slate"
+                      className="rounded-xl border border-surface-border bg-surface-white px-3 py-2 text-xs font-semibold text-typography-slate"
                     >
                       Cancel
                     </button>

@@ -12,8 +12,8 @@ import {
   Users,
   Play,
   Edit3,
-  Quote,
   Lightbulb,
+  Mail,
 } from 'lucide-react';
 import { IdeaCard } from '@/features/ideas/components/IdeaCard';
 import { SeoHead } from '@/components/seo/SeoHead';
@@ -523,68 +523,92 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. TRUSTED BY CREATORS WORLDWIDE (Real Testimonials) */}
+      {/* 6. WHO IDEORA IS FOR & PLATFORM TRANSPARENCY */}
       {/* ========================================================================= */}
       <section className="py-16 bg-surface-white border-t border-surface-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-semibold uppercase tracking-wider text-brand-royal">
-              TRUSTED BY CREATORS WORLDWIDE
+              BUILT FOR REAL COLLABORATION
             </span>
             <h2 className="mt-2 text-3xl font-light text-typography-navy tracking-tight font-heading">
-              Real people. Real impact.
+              Who Ideora is for, and how we protect your work
             </h2>
+            <p className="mt-2 text-sm text-typography-slate leading-relaxed">
+              Whether you have an unfinished concept or want to contribute your skills to someone else&rsquo;s build, Ideora keeps ownership and collaboration transparent.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Testimonial 1 */}
-            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-4">
-              <Quote className="h-6 w-6 text-brand-royal/50" />
-              <p className="text-xs sm:text-sm text-typography-navy leading-relaxed">
-                &ldquo;IDEORA helped me find the perfect collaborator to complete my idea. Amazing platform!&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2 border-t border-surface-border/60">
-                <div className="h-9 w-9 rounded-full bg-brand-royal text-white flex items-center justify-center font-bold text-xs uppercase">
-                  SA
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-typography-navy">Sarah Adeola</p>
-                  <p className="text-[11px] text-typography-muted">Product Designer</p>
-                </div>
+            {/* Card 1: For Idea Creators */}
+            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-ice text-brand-royal">
+                <Lightbulb className="h-5 w-5" />
               </div>
+              <h3 className="text-base font-semibold text-typography-navy font-heading">
+                Why publish an unfinished idea?
+              </h3>
+              <p className="text-xs sm:text-sm text-typography-slate leading-relaxed">
+                Great projects stall when one person lacks every skill needed to ship. Publishing lets you specify open roles, gather early feedback, and retain full ownership of your concept.
+              </p>
+              <Link
+                to="/ideas/new"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-royal hover:underline"
+              >
+                Publish an Idea <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
-            {/* Testimonial 2 */}
-            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-4">
-              <Quote className="h-6 w-6 text-brand-royal/50" />
-              <p className="text-xs sm:text-sm text-typography-navy leading-relaxed">
-                &ldquo;A great place to discover innovative ideas and work with talented builders.&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2 border-t border-surface-border/60">
-                <div className="h-9 w-9 rounded-full bg-brand-deep text-white flex items-center justify-center font-bold text-xs uppercase">
-                  DO
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-typography-navy">David Okafor</p>
-                  <p className="text-[11px] text-typography-muted">Full Stack Developer</p>
-                </div>
+            {/* Card 2: For Builders & Collaborators */}
+            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-ice text-brand-royal">
+                <Users className="h-5 w-5" />
               </div>
+              <h3 className="text-base font-semibold text-typography-navy font-heading">
+                Join as a builder — no idea required
+              </h3>
+              <p className="text-xs sm:text-sm text-typography-slate leading-relaxed">
+                List your skills, preferred roles, and interests so creators can discover you in People Discovery, or browse builders and send direct collaboration requests anytime.
+              </p>
+              <Link
+                to="/people"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-royal hover:underline"
+              >
+                Discover Builders <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
-            {/* Testimonial 3 */}
-            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-4">
-              <Quote className="h-6 w-6 text-brand-royal/50" />
-              <p className="text-xs sm:text-sm text-typography-navy leading-relaxed">
-                &ldquo;Finally, a platform where unfinished ideas get a second chance!&rdquo;
+            {/* Card 3: Security, Transparency & Contact */}
+            <div className="rounded-2xl border border-surface-border bg-surface-soft p-6 space-y-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-ice text-brand-royal">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-semibold text-typography-navy font-heading">
+                Clear policies &amp; direct support
+              </h3>
+              <p className="text-xs sm:text-sm text-typography-slate leading-relaxed">
+                Accounts use verified authentication and PostgreSQL Row-Level Security. Private emails stay hidden, and you can read how Ideora operates or contact us directly.
               </p>
-              <div className="flex items-center gap-3 pt-2 border-t border-surface-border/60">
-                <div className="h-9 w-9 rounded-full bg-brand-royal text-white flex items-center justify-center font-bold text-xs uppercase">
-                  AY
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-typography-navy">Amina Yusuf</p>
-                  <p className="text-[11px] text-typography-muted">Software Engineer</p>
-                </div>
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                <Link to="/about" className="font-semibold text-brand-royal hover:underline">
+                  About Ideora
+                </Link>
+                <span className="text-typography-muted">&bull;</span>
+                <Link to="/privacy" className="font-semibold text-brand-royal hover:underline">
+                  Privacy
+                </Link>
+                <span className="text-typography-muted">&bull;</span>
+                <Link to="/terms" className="font-semibold text-brand-royal hover:underline">
+                  Terms
+                </Link>
+                <span className="text-typography-muted">&bull;</span>
+                <a
+                  href="mailto:hello@ideorahq.top"
+                  className="inline-flex items-center gap-1 font-semibold text-brand-royal hover:underline"
+                >
+                  <Mail className="h-3 w-3" />
+                  Contact
+                </a>
               </div>
             </div>
           </div>

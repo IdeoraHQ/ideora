@@ -390,10 +390,10 @@ export const MessagesPage: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Associated Idea Badge */}
+                      {/* Associated Idea or Purpose Badge */}
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block truncate rounded bg-surface-soft px-1.5 py-0.5 text-[10px] font-medium text-typography-slate border border-surface-border/50">
-                          {conv.idea?.title || 'Initiative'}
+                          {conv.idea?.title || conv.collaboration_request?.purpose || 'Direct Collaboration'}
                         </span>
                       </div>
 
@@ -486,8 +486,8 @@ export const MessagesPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Associated Idea Pill */}
-                    {selectedConversation.idea && (
+                    {/* Associated Idea or General Purpose Pill */}
+                    {selectedConversation.idea ? (
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[11px] text-typography-muted">Topic:</span>
                         <Link
@@ -497,6 +497,13 @@ export const MessagesPage: React.FC = () => {
                           {selectedConversation.idea.title}
                           <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                         </Link>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-typography-muted">Purpose:</span>
+                        <span className="text-[11px] font-medium text-typography-navy truncate">
+                          {selectedConversation.collaboration_request?.purpose || 'Direct Collaboration'}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -534,8 +541,20 @@ export const MessagesPage: React.FC = () => {
                       Direct Collaboration Workspace
                     </h3>
                     <p className="text-xs text-typography-slate max-w-sm leading-relaxed">
-                      This conversation is linked to the collaboration application for{' '}
-                      <strong>{selectedConversation.idea?.title}</strong>. Send a message to coordinate scope and expectations.
+                      {selectedConversation.idea ? (
+                        <>
+                          This conversation is linked to the collaboration application for{' '}
+                          <strong>{selectedConversation.idea.title}</strong>. Send a message to coordinate scope and expectations.
+                        </>
+                      ) : (
+                        <>
+                          This conversation is linked to your direct collaboration request
+                          {selectedConversation.collaboration_request?.purpose
+                            ? ` (${selectedConversation.collaboration_request.purpose})`
+                            : ''}
+                          . Send a message to start collaborating.
+                        </>
+                      )}
                     </p>
                   </div>
                 ) : (

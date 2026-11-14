@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Compass,
-  PlusCircle,
-  Github,
-  Database,
   Bell,
   LayoutDashboard,
   User as UserIcon,
@@ -17,9 +14,10 @@ import {
   ShieldCheck,
   MessageSquarePlus,
   Settings,
+  Users,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
-import { useSupabaseStatus } from '@/hooks/useSupabaseStatus';
+import { ThemeToggle } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchUserNotifications,
@@ -31,7 +29,6 @@ import type { NotificationItem } from '@/types';
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isConfigured } = useSupabaseStatus();
   const { profile, isAuthenticated, signOut } = useAuth();
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -140,57 +137,34 @@ export const Navbar: React.FC = () => {
             <Compass className="h-4 w-4" />
             Explore Ideas
           </Link>
-          {isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
-                isActive('/dashboard')
-                  ? 'bg-brand-ice text-brand-royal'
-                  : 'text-typography-slate hover:text-typography-navy hover:bg-surface-light'
-              }`}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Workspace
-            </Link>
-          )}
+          <Link
+            to="/people"
+            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              isActive('/people')
+                ? 'bg-brand-ice text-brand-royal'
+                : 'text-typography-slate hover:text-typography-navy hover:bg-surface-light'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            People
+          </Link>
+          <Link
+            to="/about"
+            className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              isActive('/about')
+                ? 'bg-brand-ice text-brand-royal'
+                : 'text-typography-slate hover:text-typography-navy hover:bg-surface-light'
+            }`}
+          >
+            About
+          </Link>
         </nav>
 
-        {/* Actions & Status */}
+        {/* Actions */}
         <div className="flex items-center gap-2.5">
-          {/* Supabase Status Pill */}
-          <div
-            className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-              isConfigured
-                ? 'bg-functional-success-light text-functional-success border-functional-success/30'
-                : 'bg-brand-ice text-brand-royal border-brand-pale'
-            }`}
-            title={
-              isConfigured
-                ? 'Supabase cloud database connected'
-                : 'Running with interactive local state store (set .env.local for Supabase Cloud)'
-            }
-          >
-            <Database className="h-3 w-3" />
-            <span>{isConfigured ? 'Supabase Live' : 'Interactive Local DB'}</span>
+          <div className="hidden sm:inline-flex">
+            <ThemeToggle variant="compact" />
           </div>
-
-          <a
-            href="https://github.com/IdeoraHQ/ideora"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden sm:inline-flex p-2 text-typography-slate hover:text-typography-navy rounded-lg hover:bg-surface-light transition-colors"
-            title="GitHub Repository"
-          >
-            <Github className="h-5 w-5" />
-          </a>
-
-          <Link
-            to="/ideas/new"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-royal px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-deep transition-all hover:shadow-md"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Publish Idea</span>
-          </Link>
 
           {isAuthenticated && profile ? (
             <>
@@ -309,12 +283,12 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
 
-              {/* User Avatar / Dropdown */}
+              {/* User Avatar: direct link to profile on small screens, dropdown on md+ */}
               <div className="relative" ref={userMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setUserMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+                <Link
+                  to={profile.username ? `/profile/${profile.username}` : '/profile'}
+                  className="md:hidden flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+                  aria-label="My Profile"
                 >
                   {profile.avatar_url ? (
                     <img
@@ -327,13 +301,31 @@ export const Navbar: React.FC = () => {
                       {profile.full_name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="hidden sm:inline max-w-[100px] truncate">
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  className="hidden md:flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-bold text-typography-navy hover:border-brand-light transition-colors"
+                >
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name}
+                      className="h-6 w-6 rounded-full object-cover border border-surface-border shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-royal text-white text-xs font-bold shrink-0">
+                      {profile.full_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="max-w-[100px] truncate">
                     {profile.full_name}
                   </span>
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-surface-border bg-surface-white py-2 shadow-xl z-50">
+                  <div className="hidden md:block absolute right-0 mt-2 w-56 rounded-2xl border border-surface-border bg-surface-white py-2 shadow-xl z-50">
                     <div className="border-b border-surface-border px-4 py-2.5">
                       <p className="text-xs font-bold text-typography-navy truncate">
                         {profile.full_name}
@@ -353,6 +345,15 @@ export const Navbar: React.FC = () => {
                     >
                       <LayoutDashboard className="h-4 w-4 text-brand-royal" />
                       Builder Workspace
+                    </Link>
+
+                    <Link
+                      to="/people"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-typography-charcoal hover:bg-surface-light"
+                    >
+                      <Users className="h-4 w-4 text-brand-royal" />
+                      People Discovery
                     </Link>
 
                     <Link

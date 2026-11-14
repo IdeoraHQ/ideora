@@ -1,142 +1,254 @@
-import React from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
+  LayoutDashboard,
   Compass,
-  Lightbulb,
-  Bell,
-  User,
+  Users,
   Plus,
+  User as UserIcon,
+  MoreHorizontal,
+  X,
+  Lightbulb,
+  FolderGit2,
+  MessageSquare,
+  Bell,
+  MessageSquarePlus,
+  Settings,
+  ShieldCheck,
+  Inbox,
+  Info,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common';
 import { cn } from '@/utils/cn';
 
 interface MobileBottomNavProps {
   unreadCount?: number;
+  unreadNotificationsCount?: number;
+  unreadMessagesCount?: number;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   unreadCount = 0,
+  unreadNotificationsCount,
+  unreadMessagesCount = 0,
 }) => {
-  const { profile, isAuthenticated } = useAuth();
+  const effectiveNotifCount = unreadNotificationsCount ?? unreadCount;
+  const { profile, isAuthenticated, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [moreOpen, setMoreOpen] = useState(false);
 
-  // 5 primary destinations as required
-  const tabs = [
-    {
-      label: 'Home',
-      to: '/dashboard',
-      icon: Home,
-      isActive: location.pathname === '/dashboard' && !location.search.includes('tab='),
-    },
-    {
-      label: 'Explore',
-      to: '/explore',
-      icon: Compass,
-      isActive: location.pathname.startsWith('/explore'),
-    },
-    {
-      label: 'My Ideas',
-      to: '/dashboard?tab=ideas',
-      icon: Lightbulb,
-      isActive:
-        location.pathname === '/dashboard' && location.search.includes('tab=ideas'),
-    },
-    {
-      label: 'Notifications',
-      to: '/notifications',
-      icon: Bell,
-      badge: unreadCount > 0 ? unreadCount : undefined,
-      isActive: location.pathname.startsWith('/notifications'),
-    },
-    {
-      label: 'Profile',
-      to: isAuthenticated && profile ? `/profile/${profile.username}` : '/auth',
-      icon: User,
-      isProfile: true,
-      isActive: location.pathname.startsWith('/profile') || location.pathname === '/auth',
-    },
-  ];
+  const handleSignOut = async () => {
+    setMoreOpen(false);
+    await signOut();
+    navigate('/');
+  };
+
+  const profilePath = profile?.username ? `/profile/${profile.username}` : '/profile';
+
+  const moreLinks = isAuthenticated
+    ? [
+        { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+        { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
+        { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Inbox },
+        { label: 'Projects', to: '/projects', icon: FolderGit2 },
+        {
+          label: 'Messages',
+          to: '/messages',
+          icon: MessageSquare,
+          count: unreadMessagesCount,
+        },
+        {
+          label: 'Notifications',
+          to: '/notifications',
+          icon: Bell,
+          count: effectiveNotifCount,
+        },
+        { label: 'Feedback', to: '/feedback', icon: MessageSquarePlus },
+        { label: 'My Profile', to: profilePath, icon: UserIcon },
+        { label: 'Settings', to: '/settings', icon: Settings },
+        { label: 'About', to: '/about', icon: Info },
+        ...(profile?.role === 'admin'
+          ? [{ label: 'Admin Center', to: '/admin', icon: ShieldCheck }]
+          : []),
+      ]
+    : [
+        { label: 'About Ideora', to: '/about', icon: Info },
+        { label: 'Sign In', to: '/auth', icon: LogIn },
+      ];
+
+  const isMoreRouteActive = [
+    '/projects',
+    '/messages',
+    '/notifications',
+    '/feedback',
+    '/settings',
+    '/admin',
+    '/about',
+  ].some((prefix) => location.pathname.startsWith(prefix));
 
   return (
-    <nav
-      className="md:hidden fixed bottom-3 left-3 right-3 z-40 max-w-lg mx-auto pointer-events-none"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      aria-label="Mobile Navigation"
-    >
-      <div className="relative rounded-3xl bg-surface-white/98 backdrop-blur-xl border border-surface-border/70 shadow-[0_12px_40px_rgba(20,33,61,0.14)] px-3 pt-3 pb-2.5 pointer-events-auto">
-        {/* Floating Elevated Blue Circular '+' Action Button */}
-        <Link
-          to="/ideas/new"
-          className="absolute -top-5 right-5 flex h-12 w-12 items-center justify-center rounded-full bg-brand-royal text-white shadow-xl shadow-brand-royal/45 hover:bg-brand-deep active:scale-95 transition-all focus:outline-none"
-          title="Publish an Idea"
-          aria-label="Publish an Idea"
+    <>
+      {/* Slide-up "More" Sheet */}
+      {moreOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setMoreOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="More navigation options"
         >
-          <Plus className="h-6 w-6 stroke-[2.5]" />
-        </Link>
-
-        {/* 5 Destination Navigation Items */}
-        <div className="flex items-center justify-around">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <NavLink
-                key={tab.label}
-                to={tab.to}
-                className={cn(
-                  'relative flex flex-col items-center justify-center flex-1 py-1 text-center transition-colors min-w-0 group',
-                  tab.isActive
-                    ? 'text-brand-royal font-semibold'
-                    : 'text-typography-slate hover:text-typography-navy font-medium'
-                )}
+          <div
+            className="w-full rounded-t-3xl border-t border-surface-border bg-surface-white p-5 pb-8 shadow-2xl space-y-5 animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-typography-navy font-heading">
+                  Workspace Menu
+                </h2>
+                <p className="text-xs text-typography-muted">
+                  Navigate tools, messages, and appearance
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMoreOpen(false)}
+                className="rounded-xl p-2 text-typography-muted hover:text-typography-navy hover:bg-surface-soft transition-colors"
+                aria-label="Close menu"
               >
-                <div className="relative flex items-center justify-center">
-                  {tab.isProfile && profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.full_name || 'Profile'}
-                      className={cn(
-                        'h-5 w-5 rounded-full object-cover transition-transform',
-                        tab.isActive
-                          ? 'ring-2 ring-brand-royal scale-105'
-                          : 'border border-surface-border group-hover:border-brand-royal/50'
-                      )}
-                    />
-                  ) : (
-                    <Icon
-                      className={cn(
-                        'h-5 w-5 transition-transform duration-150',
-                        tab.isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8] group-hover:scale-105'
-                      )}
-                    />
-                  )}
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-                  {Boolean(tab.badge && tab.badge > 0) && (
-                    <span className="absolute -top-1 -right-2 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-functional-error px-1 text-[9px] font-bold text-white shadow-sm">
-                      {Number(tab.badge) > 9 ? '9+' : tab.badge}
-                    </span>
-                  )}
-                </div>
+            {/* Theme Selector inside More sheet so mobile header stays clean */}
+            <div className="flex items-center justify-between rounded-2xl border border-surface-border bg-surface-soft px-4 py-3">
+              <span className="text-xs font-semibold text-typography-navy">
+                Appearance
+              </span>
+              <ThemeToggle variant="compact" />
+            </div>
 
-                <span
-                  className={cn(
-                    'mt-1 text-[11px] tracking-tight truncate max-w-[62px] transition-colors',
-                    tab.isActive
-                      ? 'text-brand-royal font-medium'
-                      : 'text-typography-slate group-hover:text-typography-navy'
-                  )}
-                >
-                  {tab.label}
-                </span>
+            {/* Grid of Navigation Links */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {moreLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMoreOpen(false)}
+                    className="relative flex items-center gap-3 rounded-2xl border border-surface-border bg-surface-soft px-3.5 py-3 text-xs font-semibold text-typography-navy hover:border-brand-royal/40 hover:bg-surface-light transition-colors"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-ice text-brand-royal">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="truncate">{item.label}</span>
+                    {item.count !== undefined && item.count > 0 && (
+                      <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-royal px-1.5 text-[10px] font-bold text-white">
+                        {item.count > 9 ? '9+' : item.count}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
 
-                {tab.isActive && (
-                  <span className="absolute -bottom-1 h-0.5 w-4 rounded-full bg-brand-royal" />
-                )}
-              </NavLink>
-            );
-          })}
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-functional-error/30 bg-functional-error-light/40 px-4 py-3 text-xs font-semibold text-functional-error hover:bg-functional-error-light transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      )}
+
+      {/* Fixed Bottom Navigation Bar */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-surface-border bg-surface-white/95 backdrop-blur-md px-2 pb-[env(safe-area-inset-bottom)]"
+        aria-label="Mobile navigation"
+      >
+        <div className="grid grid-cols-5 items-center h-16 max-w-md mx-auto">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              cn(
+                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
+              )
+            }
+          >
+            <Home className="h-5 w-5" />
+            <span>Home</span>
+          </NavLink>
+
+          <NavLink
+            to="/explore"
+            className={({ isActive }) =>
+              cn(
+                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
+              )
+            }
+          >
+            <Compass className="h-5 w-5" />
+            <span>Explore</span>
+          </NavLink>
+
+          {/* Center Floating Publish Button */}
+          <div className="flex items-center justify-center">
+            <Link
+              to="/ideas/new"
+              className="flex h-11 w-11 -mt-4 items-center justify-center rounded-2xl bg-brand-royal text-white shadow-lg shadow-brand-royal/30 hover:bg-brand-deep active:scale-95 transition-all"
+              aria-label="Publish Idea"
+            >
+              <Plus className="h-6 w-6" />
+            </Link>
+          </div>
+
+          <NavLink
+            to="/people"
+            className={({ isActive }) =>
+              cn(
+                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
+              )
+            }
+          >
+            <Users className="h-5 w-5" />
+            <span>People</span>
+          </NavLink>
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              'relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+              moreOpen || isMoreRouteActive || location.pathname.startsWith(profilePath)
+                ? 'text-brand-royal font-semibold'
+                : 'text-typography-slate'
+            )}
+          >
+            <div className="relative">
+              {unreadMessagesCount + effectiveNotifCount > 0 ? (
+                <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-brand-royal" />
+              ) : null}
+              <MoreHorizontal className="h-5 w-5" />
+            </div>
+            <span>More</span>
+          </button>
+        </div>
+      </nav>
+    </>
   );
 };

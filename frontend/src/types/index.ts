@@ -1,4 +1,4 @@
-import type { Database, CollaborationType, IdeaStatus } from './database.types';
+import type { Database, CollaborationType, IdeaStatus, UserRole } from './database.types';
 
 export * from './database.types';
 
@@ -44,14 +44,39 @@ export interface CreateIdeaPayload {
 // Domain model for Collaboration Request
 export type CollaborationRequest = Database['public']['Tables']['collaboration_requests']['Row'] & {
   requester?: UserProfile;
-  idea?: Database['public']['Tables']['ideas']['Row'];
+  recipient?: UserProfile | null;
+  idea?: Database['public']['Tables']['ideas']['Row'] | null;
   role?: IdeaRoleNeeded | null;
 };
 
 export interface SubmitCollaborationPayload {
-  idea_id: string;
+  idea_id?: string | null;
   role_id?: string;
+  recipient_id?: string;
+  request_type?: 'idea_based' | 'general';
+  purpose?: string;
+  skills_offered?: string[];
   message: string;
+}
+
+export interface DiscoverablePerson {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  role: UserRole;
+  skills: string[];
+  interests: string[];
+  preferred_roles: string[];
+  looking_to_contribute: string | null;
+  collaboration_goals: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  website_url: string | null;
+  is_discoverable: boolean;
+  created_at: string;
+  published_ideas_count: number;
 }
 
 // Domain model for Idea Comment
@@ -67,12 +92,12 @@ export type NotificationItem = Database['public']['Tables']['notifications']['Ro
 
 // Domain models for Direct Messaging
 export type Conversation = Database['public']['Tables']['conversations']['Row'] & {
-  idea?: Pick<Database['public']['Tables']['ideas']['Row'], 'id' | 'title' | 'slug' | 'category' | 'status'>;
+  idea?: Pick<Database['public']['Tables']['ideas']['Row'], 'id' | 'title' | 'slug' | 'category' | 'status'> | null;
   creator?: UserProfile;
   requester?: UserProfile;
   collaboration_request?: Pick<
     Database['public']['Tables']['collaboration_requests']['Row'],
-    'id' | 'status' | 'message' | 'role_id'
+    'id' | 'status' | 'message' | 'role_id' | 'request_type' | 'purpose'
   > & {
     role?: IdeaRoleNeeded | null;
   };

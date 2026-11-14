@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase/client';
-import type { AccountDeletionRequest, UserSettings } from '@/types';
+import type { AccountDeletionRequest, ThemePreference, UserSettings } from '@/types';
 
 const ALLOWED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -38,6 +38,7 @@ export async function fetchUserSettings(): Promise<{
           notify_messages: true,
           notify_idea_activity: true,
           notify_platform_announcements: true,
+          theme_preference: 'system',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -59,6 +60,7 @@ export async function updateUserSettings(prefs: {
   notify_messages: boolean;
   notify_idea_activity: boolean;
   notify_platform_announcements: boolean;
+  theme_preference?: ThemePreference;
 }): Promise<{ data: UserSettings | null; error: Error | null }> {
   try {
     const {
@@ -78,7 +80,44 @@ export async function updateUserSettings(prefs: {
         notify_messages: prefs.notify_messages,
         notify_idea_activity: prefs.notify_idea_activity,
         notify_platform_announcements: prefs.notify_platform_announcements,
+        ...(prefs.theme_preference ? { theme_preference: prefs.theme_preference } : {}),
       })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
+ * Persist only the user's theme preference to Supabase without overwriting
+ * notification toggles.
+ */
+export async function updateThemePreference(
+  themePreference: ThemePreference
+): Promise<{ data: UserSettings | null; error: Error | null }> {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { data: null, error: null };
+    }
+
+    const { data, error } = await supabase
+      .from('user_settings')
+      .upsert(
+        {
+          user_id: user.id,
+          theme_preference: themePreference,
+        },
+        { onConflict: 'user_id' }
+      )
       .select('*')
       .single();
 

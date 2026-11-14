@@ -27,7 +27,7 @@ const STATUS_BADGE: Record<ProjectStatus, string> = {
   active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   paused: 'bg-amber-50 text-amber-700 border-amber-200',
   completed: 'bg-brand-ice text-brand-royal border-brand-royal/20',
-  archived: 'bg-slate-100 text-slate-600 border-slate-200',
+  archived: 'bg-surface-light text-typography-slate border-surface-border',
 };
 
 export const AdminProjectsPage: React.FC = () => {

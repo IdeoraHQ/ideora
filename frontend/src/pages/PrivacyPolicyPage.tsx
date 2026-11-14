@@ -204,10 +204,10 @@ const sections: PolicySection[] = [
           Self-service full account deletion is not currently automated in the user interface.
           To request deletion of your account and associated personal data, please contact us at{' '}
           <a
-            href="mailto:privacy@ideorahq.top"
+            href="mailto:hello@ideorahq.top"
             className="font-semibold text-brand-royal hover:underline"
           >
-            privacy@ideorahq.top
+            hello@ideorahq.top
           </a>
           .
         </p>
@@ -279,10 +279,10 @@ const sections: PolicySection[] = [
         <p>
           For privacy questions, data access requests, or deletion enquiries, contact us at{' '}
           <a
-            href="mailto:privacy@ideorahq.top"
+            href="mailto:hello@ideorahq.top"
             className="font-semibold text-brand-royal hover:underline"
           >
-            privacy@ideorahq.top
+            hello@ideorahq.top
           </a>
           .
         </p>
@@ -353,11 +353,11 @@ export const PrivacyPolicyPage: React.FC = () => {
 
             <div className="mt-5 border-t border-surface-border pt-4">
               <a
-                href="mailto:privacy@ideorahq.top"
+                href="mailto:hello@ideorahq.top"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-brand-royal hover:underline"
               >
                 <Mail className="h-3.5 w-3.5" />
-                privacy@ideorahq.top
+                hello@ideorahq.top
               </a>
             </div>
           </aside>

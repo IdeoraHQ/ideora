@@ -16,6 +16,13 @@ import {
   Sparkles,
   Check,
   ExternalLink,
+  UserPlus,
+  MessageSquare,
+  Compass,
+  Briefcase,
+  Target,
+  Clock,
+  Plus,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SeoHead } from '@/components/seo/SeoHead';
@@ -25,10 +32,12 @@ import {
   fetchUserIdeas,
   toggleIdeaUpvote,
   fetchUserUpvotedIdeaIds,
+  fetchGeneralRequestBetween,
 } from '@/services/api';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { CustomSelect } from '@/components/common';
-import type { UserProfile, Idea, UserRole, SkillCategory } from '@/types';
+import { DirectCollaborateModal } from '@/components/collaborations/DirectCollaborateModal';
+import type { UserProfile, Idea, UserRole, SkillCategory, CollaborationRequest } from '@/types';
 
 const skillOptions: { label: string; value: SkillCategory }[] = [
   { label: 'Frontend', value: 'frontend' },
@@ -43,7 +52,7 @@ const skillOptions: { label: string; value: SkillCategory }[] = [
 export const ProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
-  const { profile: currentUser, refreshProfile } = useAuth();
+  const { profile: currentUser, loading: authLoading, refreshProfile } = useAuth();
 
   const [viewedProfile, setViewedProfile] = useState<UserProfile | null>(null);
   const [userIdeas, setUserIdeas] = useState<Idea[]>([]);
@@ -58,23 +67,51 @@ export const ProfilePage: React.FC = () => {
   const [bio, setBio] = useState('');
   const [role, setRole] = useState<UserRole>('collaborator');
   const [skills, setSkills] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [interestInput, setInterestInput] = useState('');
+  const [preferredRoles, setPreferredRoles] = useState<string[]>([]);
+  const [roleInput, setRoleInput] = useState('');
+  const [lookingToContribute, setLookingToContribute] = useState('');
+  const [collaborationGoals, setCollaborationGoals] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [existingGeneralReq, setExistingGeneralReq] = useState<CollaborationRequest | null>(null);
+  const [showCollabModal, setShowCollabModal] = useState(false);
 
   const loadData = useCallback(async () => {
-    const targetIdentifier = username || currentUser?.username;
+    const cleanUsername =
+      username && username !== 'undefined' && username !== 'null'
+        ? username
+        : undefined;
+
+    if (!cleanUsername && authLoading) {
+      return;
+    }
+
+    const targetIdentifier = cleanUsername || currentUser?.username || currentUser?.id;
     if (!targetIdentifier) {
+      setViewedProfile(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    const { data: prof } = await fetchProfile(targetIdentifier);
+    const { data: fetchedProf } = await fetchProfile(targetIdentifier);
+    const isSelfFallback =
+      currentUser &&
+      (!cleanUsername ||
+        cleanUsername === currentUser.username ||
+        cleanUsername === currentUser.id);
+    const prof = fetchedProf || (isSelfFallback ? currentUser : null);
+
     if (!prof) {
+      if (authLoading) {
+        return;
+      }
       setViewedProfile(null);
       setLoading(false);
       return;
@@ -85,14 +122,22 @@ export const ProfilePage: React.FC = () => {
     setBio(prof.bio || '');
     setRole(prof.role);
     setSkills(prof.skills || []);
+    setInterests(prof.interests || []);
+    setPreferredRoles(prof.preferred_roles || []);
+    setLookingToContribute(prof.looking_to_contribute || '');
+    setCollaborationGoals(prof.collaboration_goals || '');
     setGithubUrl(prof.github_url || '');
     setLinkedinUrl(prof.linkedin_url || '');
     setWebsiteUrl(prof.website_url || '');
 
-    const [ideasRes, upvoted] = await Promise.all([
+    const [ideasRes, upvoted, generalReqRes] = await Promise.all([
       fetchUserIdeas(prof.id),
       fetchUserUpvotedIdeaIds(),
+      currentUser && currentUser.id !== prof.id
+        ? fetchGeneralRequestBetween(prof.id)
+        : Promise.resolve({ data: null, error: null }),
     ]);
+    setExistingGeneralReq(generalReqRes?.data ?? null);
 
     if (ideasRes.data) {
       const visible =
@@ -103,7 +148,7 @@ export const ProfilePage: React.FC = () => {
     }
     setUpvotedIds(upvoted);
     setLoading(false);
-  }, [username, currentUser?.username, currentUser?.id]);
+  }, [username, authLoading, currentUser]);
 
   useEffect(() => {
     void loadData();
@@ -136,6 +181,10 @@ export const ProfilePage: React.FC = () => {
       bio: bio.trim() || null,
       role,
       skills,
+      interests,
+      preferred_roles: preferredRoles,
+      looking_to_contribute: lookingToContribute.trim() || null,
+      collaboration_goals: collaborationGoals.trim() || null,
       github_url: githubUrl.trim() || null,
       linkedin_url: linkedinUrl.trim() || null,
       website_url: websiteUrl.trim() || null,
@@ -342,7 +391,7 @@ export const ProfilePage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              {isOwnProfile && (
+              {isOwnProfile ? (
                 <button
                   type="button"
                   onClick={() => setIsEditing(!isEditing)}
@@ -359,6 +408,34 @@ export const ProfilePage: React.FC = () => {
                       Edit Profile
                     </>
                   )}
+                </button>
+              ) : existingGeneralReq?.status === 'accepted' ? (
+                <Link
+                  to="/messages"
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-royal px-4 py-2.5 text-xs font-semibold text-white hover:bg-brand-royal-hover transition-all shrink-0 self-start sm:self-end shadow-xs"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Open Messages
+                </Link>
+              ) : existingGeneralReq?.status === 'pending' ? (
+                <span className="inline-flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-4 py-2.5 text-xs font-semibold text-typography-slate shrink-0 self-start sm:self-end">
+                  <Clock className="h-3.5 w-3.5 text-brand-royal" />
+                  Collaboration Request Pending
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!currentUser) {
+                      navigate('/login');
+                      return;
+                    }
+                    setShowCollabModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-royal px-4 py-2.5 text-xs font-semibold text-white hover:bg-brand-royal-hover active:scale-98 transition-all shrink-0 self-start sm:self-end shadow-xs"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Request Collaboration
                 </button>
               )}
             </div>
@@ -392,6 +469,76 @@ export const ProfilePage: React.FC = () => {
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Collaboration Profile Details */}
+              {(viewedProfile.looking_to_contribute ||
+                viewedProfile.collaboration_goals ||
+                (viewedProfile.preferred_roles && viewedProfile.preferred_roles.length > 0) ||
+                (viewedProfile.interests && viewedProfile.interests.length > 0)) && (
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {viewedProfile.looking_to_contribute && (
+                    <div className="rounded-2xl border border-surface-border bg-surface-soft/70 p-4 space-y-1">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-typography-muted">
+                        <Briefcase className="h-3.5 w-3.5 text-brand-royal" />
+                        Looking to Contribute
+                      </span>
+                      <p className="text-xs sm:text-sm text-typography-navy leading-relaxed">
+                        {viewedProfile.looking_to_contribute}
+                      </p>
+                    </div>
+                  )}
+
+                  {viewedProfile.collaboration_goals && (
+                    <div className="rounded-2xl border border-surface-border bg-surface-soft/70 p-4 space-y-1">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-typography-muted">
+                        <Target className="h-3.5 w-3.5 text-brand-royal" />
+                        Collaboration Goals
+                      </span>
+                      <p className="text-xs sm:text-sm text-typography-navy leading-relaxed">
+                        {viewedProfile.collaboration_goals}
+                      </p>
+                    </div>
+                  )}
+
+                  {viewedProfile.preferred_roles && viewedProfile.preferred_roles.length > 0 && (
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-typography-muted mb-2">
+                        <Users className="h-3.5 w-3.5 text-brand-royal" />
+                        Preferred Collaboration Roles
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {viewedProfile.preferred_roles.map((r) => (
+                          <span
+                            key={r}
+                            className="rounded-lg bg-brand-ice px-2.5 py-1 text-xs font-medium text-brand-royal"
+                          >
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewedProfile.interests && viewedProfile.interests.length > 0 && (
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-typography-muted mb-2">
+                        <Compass className="h-3.5 w-3.5 text-brand-royal" />
+                        Areas of Interest
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {viewedProfile.interests.map((interest) => (
+                          <span
+                            key={interest}
+                            className="rounded-lg border border-surface-border bg-surface-soft px-2.5 py-1 text-xs font-medium text-typography-navy"
+                          >
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -577,6 +724,153 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Collaboration Preferences */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold text-typography-navy mb-1">
+                    What are you looking to contribute?
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={lookingToContribute}
+                    onChange={(e) => setLookingToContribute(e.target.value)}
+                    placeholder="e.g., Full-stack TypeScript & React architecture, UI polish, and rapid MVP prototyping."
+                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-typography-navy mb-1">
+                    Who or what do you want to collaborate on?
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={collaborationGoals}
+                    onChange={(e) => setCollaborationGoals(e.target.value)}
+                    placeholder="e.g., Looking to team up with product designers or founders building AI developer tools."
+                    className="w-full rounded-xl border border-surface-border bg-surface-soft px-3 py-2 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-xs font-semibold text-typography-navy mb-1">
+                    Preferred Collaboration Roles
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={roleInput}
+                      onChange={(e) => setRoleInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = roleInput.trim();
+                          if (val && !preferredRoles.includes(val)) {
+                            setPreferredRoles((prev) => [...prev, val]);
+                          }
+                          setRoleInput('');
+                        }
+                      }}
+                      placeholder="e.g., Frontend Developer, Co-Founder"
+                      className="flex-1 rounded-xl border border-surface-border bg-surface-soft px-3 py-1.5 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = roleInput.trim();
+                        if (val && !preferredRoles.includes(val)) {
+                          setPreferredRoles((prev) => [...prev, val]);
+                        }
+                        setRoleInput('');
+                      }}
+                      className="inline-flex items-center gap-1 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-semibold text-typography-navy hover:bg-surface-border/40"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add
+                    </button>
+                  </div>
+                  {preferredRoles.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {preferredRoles.map((r) => (
+                        <span
+                          key={r}
+                          className="inline-flex items-center gap-1 rounded-lg bg-brand-ice px-2.5 py-1 text-xs font-medium text-brand-royal"
+                        >
+                          {r}
+                          <button
+                            type="button"
+                            onClick={() => setPreferredRoles((prev) => prev.filter((x) => x !== r))}
+                            aria-label={`Remove ${r}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-typography-navy mb-1">
+                    Areas of Interest
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={interestInput}
+                      onChange={(e) => setInterestInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = interestInput.trim();
+                          if (val && !interests.includes(val)) {
+                            setInterests((prev) => [...prev, val]);
+                          }
+                          setInterestInput('');
+                        }
+                      }}
+                      placeholder="e.g., AI, FinTech, Climate Tech"
+                      className="flex-1 rounded-xl border border-surface-border bg-surface-soft px-3 py-1.5 text-xs text-typography-navy focus:border-brand-royal focus:bg-surface-white focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = interestInput.trim();
+                        if (val && !interests.includes(val)) {
+                          setInterests((prev) => [...prev, val]);
+                        }
+                        setInterestInput('');
+                      }}
+                      className="inline-flex items-center gap-1 rounded-xl border border-surface-border bg-surface-soft px-2.5 py-1.5 text-xs font-semibold text-typography-navy hover:bg-surface-border/40"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add
+                    </button>
+                  </div>
+                  {interests.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {interests.map((item) => (
+                        <span
+                          key={item}
+                          className="inline-flex items-center gap-1 rounded-lg border border-surface-border bg-surface-soft px-2.5 py-1 text-xs font-medium text-typography-navy"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => setInterests((prev) => prev.filter((x) => x !== item))}
+                            aria-label={`Remove ${item}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-typography-navy mb-1">
@@ -661,23 +955,51 @@ export const ProfilePage: React.FC = () => {
 
           {userIdeas.length === 0 ? (
             <div className="rounded-3xl border border-surface-border bg-surface-white p-12 text-center shadow-2xs">
-              <Lightbulb className="mx-auto h-10 w-10 text-typography-muted opacity-60 mb-3" />
+              <Users className="mx-auto h-10 w-10 text-brand-royal opacity-80 mb-3" />
               <h3 className="text-base sm:text-lg font-medium text-typography-navy">
-                No Initiatives Published Yet
-              </h3>
-              <p className="mt-1 text-xs text-typography-slate max-w-sm mx-auto leading-relaxed">
                 {isOwnProfile
-                  ? 'Have a concept you want to develop? Publish your first initiative and start recruiting co-founders.'
-                  : `${viewedProfile.full_name} has not published any public initiatives yet.`}
+                  ? 'No Published Initiatives Yet — Still Open to Collaborate'
+                  : `Available to Collaborate`}
+              </h3>
+              <p className="mt-1 text-xs text-typography-slate max-w-md mx-auto leading-relaxed">
+                {isOwnProfile
+                  ? 'You do not need a published idea to connect with builders. Complete your skills and interests above, or publish an initiative whenever you are ready.'
+                  : `${viewedProfile.full_name} hasn't published an initiative yet, but you can still send a direct collaboration request to explore ideas or build together.`}
               </p>
 
-              {isOwnProfile && (
-                <Link
-                  to="/ideas/new"
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-royal px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-deep transition-all"
-                >
-                  Publish an Initiative
-                </Link>
+              {isOwnProfile ? (
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    to="/people"
+                    className="inline-flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-4 py-2.5 text-xs font-semibold text-typography-navy hover:bg-surface-border/40 transition-all"
+                  >
+                    <Users className="h-3.5 w-3.5 text-brand-royal" />
+                    Browse Builders
+                  </Link>
+                  <Link
+                    to="/ideas/new"
+                    className="inline-flex items-center gap-2 rounded-xl bg-brand-royal px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-deep transition-all"
+                  >
+                    Publish an Initiative
+                  </Link>
+                </div>
+              ) : (
+                !existingGeneralReq && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!currentUser) {
+                        navigate('/login');
+                        return;
+                      }
+                      setShowCollabModal(true);
+                    }}
+                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-royal px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-deep transition-all"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Send Collaboration Request
+                  </button>
+                )
               )}
             </div>
           ) : (
@@ -694,6 +1016,26 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      <DirectCollaborateModal
+        isOpen={showCollabModal}
+        onClose={() => setShowCollabModal(false)}
+        recipient={
+          viewedProfile
+            ? {
+                id: viewedProfile.id,
+                full_name: viewedProfile.full_name,
+                username: viewedProfile.username,
+                avatar_url: viewedProfile.avatar_url,
+                skills: viewedProfile.skills,
+                preferred_roles: viewedProfile.preferred_roles,
+              }
+            : null
+        }
+        onSuccess={() => {
+          void loadData();
+        }}
+      />
     </div>
   );
 };
