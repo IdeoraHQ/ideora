@@ -123,14 +123,50 @@ export const CreateIdeaPage: React.FC = () => {
     );
   }
 
+  const commitTag = (rawValue: string = tagInput) => {
+    const candidates = rawValue
+      .split(',')
+      .map((part) => part.trim().replace(/^#/, ''))
+      .filter(Boolean);
+
+    if (candidates.length === 0) {
+      setTagInput('');
+      return;
+    }
+
+    setTags((prev) => {
+      const next = [...prev];
+      for (const candidate of candidates) {
+        if (next.length >= 8) break;
+        if (!next.some((existing) => existing.toLowerCase() === candidate.toLowerCase())) {
+          next.push(candidate);
+        }
+      }
+      return next;
+    });
+    setTagInput('');
+  };
+
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val.includes(',')) {
+      const endsWithComma = val.endsWith(',');
+      const parts = val.split(',');
+      const toCommit = endsWithComma ? parts.join(',') : parts.slice(0, -1).join(',');
+      const remainder = endsWithComma ? '' : parts[parts.length - 1];
+      if (toCommit.trim()) {
+        commitTag(toCommit);
+      }
+      setTagInput(remainder);
+      return;
+    }
+    setTagInput(val);
+  };
+
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
-      const cleaned = tagInput.trim().replace(/^#/, '');
-      if (cleaned && !tags.includes(cleaned) && tags.length < 8) {
-        setTags([...tags, cleaned]);
-        setTagInput('');
-      }
+      commitTag(tagInput);
     }
   };
 
@@ -340,10 +376,10 @@ export const CreateIdeaPage: React.FC = () => {
           {/* Tags */}
           <div>
             <label className="block text-xs font-bold text-typography-navy mb-1.5">
-              Tech Stack & Topic Tags (Press Enter to add)
+              Tech Stack & Topic Tags (Press Enter, comma, or tap Add)
             </label>
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-surface-border bg-surface-soft p-2.5">
-              <Tag className="h-4 w-4 text-typography-muted ml-1" />
+              <Tag className="h-4 w-4 text-typography-muted ml-1 shrink-0" />
               {tags.map((t) => (
                 <span
                   key={t}
@@ -354,19 +390,36 @@ export const CreateIdeaPage: React.FC = () => {
                     type="button"
                     onClick={() => removeTag(t)}
                     className="hover:text-functional-error"
+                    aria-label={`Remove ${t}`}
                   >
                     &times;
                   </button>
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-                placeholder="Add tag (e.g. Rust, React, WebGPU)..."
-                className="flex-1 min-w-[180px] bg-transparent text-xs text-typography-navy focus:outline-none"
-              />
+              <div className="flex flex-1 items-center gap-2 min-w-[180px]">
+                <input
+                  type="text"
+                  enterKeyHint="done"
+                  value={tagInput}
+                  onChange={handleTagInputChange}
+                  onKeyDown={handleAddTag}
+                  onBlur={() => {
+                    if (tagInput.trim()) commitTag(tagInput);
+                  }}
+                  placeholder="Add tag (e.g. Rust, React, WebGPU)..."
+                  className="flex-1 min-w-0 bg-transparent text-xs text-typography-navy focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => commitTag(tagInput)}
+                  disabled={!tagInput.trim() || tags.length >= 8}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-brand-royal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add
+                </button>
+              </div>
             </div>
           </div>
 

@@ -74,7 +74,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col border-r border-surface-border bg-surface-white transition-all duration-300 ease-in-out shrink-0 select-none z-30',
+        'hidden md:flex md:sticky md:top-0 md:h-screen flex-col border-r border-surface-border bg-surface-white transition-all duration-300 ease-in-out shrink-0 select-none z-30',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >

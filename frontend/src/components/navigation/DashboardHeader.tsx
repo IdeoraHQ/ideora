@@ -115,7 +115,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-surface-border bg-surface-white/95 px-4 sm:px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-30 shrink-0 flex h-16 w-full items-center justify-between border-b border-surface-border bg-surface-white/95 px-4 sm:px-6 backdrop-blur-md">
       {/* Left: Breadcrumbs / Title */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex flex-col">

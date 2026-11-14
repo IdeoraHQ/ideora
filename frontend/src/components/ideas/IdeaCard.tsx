@@ -180,8 +180,17 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
                 <Users className="h-3.5 w-3.5 text-brand-royal" />
                 Required Roles
               </span>
-              <span className="text-[10px] font-semibold text-brand-royal bg-brand-ice px-2 py-0.5 rounded-full border border-brand-pale">
-                {totalOpenSpots} {totalOpenSpots === 1 ? 'seat open' : 'seats open'}
+              <span
+                className={cn(
+                  'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                  totalOpenSpots === 0
+                    ? 'text-typography-muted bg-surface-light border-surface-border'
+                    : 'text-brand-royal bg-brand-ice border-brand-pale'
+                )}
+              >
+                {totalOpenSpots === 0
+                  ? 'All roles filled'
+                  : `${totalOpenSpots} ${totalOpenSpots === 1 ? 'seat open' : 'seats open'}`}
               </span>
             </div>
 
@@ -202,6 +211,7 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
                   >
                     <RoleIcon className="h-3 w-3 text-typography-muted shrink-0" />
                     <span className="truncate max-w-[120px]">{role.role_title}</span>
+                    {isFull && <span className="text-[10px] font-semibold">(Filled)</span>}
                   </span>
                 );
               })}

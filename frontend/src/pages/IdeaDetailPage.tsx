@@ -856,6 +856,15 @@ export const IdeaDetailPage: React.FC = () => {
                             >
                               {role.spots_filled}/{role.spots_available} seats filled
                             </span>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                isFull
+                                  ? 'bg-surface-light text-typography-muted border border-surface-border'
+                                  : 'bg-functional-success-light text-functional-success'
+                              }`}
+                            >
+                              {isFull ? 'Filled' : 'Open'}
+                            </span>
                           </div>
                           {role.description && (
                             <p className="text-xs text-typography-slate font-normal leading-relaxed break-all [word-break:break-all]">

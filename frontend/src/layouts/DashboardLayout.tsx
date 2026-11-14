@@ -41,7 +41,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   }, [isAuthenticated, profile?.id, location.pathname]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-surface-soft text-typography-charcoal font-sans">
+    <div className="flex min-h-screen w-full bg-surface-soft text-typography-charcoal font-sans">
       <SeoHead
         title={title ? `${title} | Ideora` : 'Workspace | Ideora'}
         description="Private Ideora builder workspace for managing ideas, collaborations, messages, and account settings."
@@ -55,7 +55,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       />
 
       {/* 2. Main Application Viewport */}
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+      <div className="flex flex-1 flex-col min-w-0">
         {/* Top Header */}
         <DashboardHeader
           title={title}
@@ -63,8 +63,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           unreadMessagesCount={unreadMessagesCount}
         />
 
-        {/* Scrollable Main Viewport (pb-24 ensures mobile content never hides behind bottom nav) */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 pb-28 md:pb-8">
+        {/* Main Content (pb-28 ensures mobile content never hides behind bottom nav) */}
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-28 md:pb-8">
           <Outlet />
         </main>
       </div>
