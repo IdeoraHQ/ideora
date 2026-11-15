@@ -5,7 +5,7 @@ import { Github, MessageSquare } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#0F172A] text-white py-12 border-t border-surface-border">
+    <footer className="bg-[#0F172A] text-white pt-12 pb-24 md:pb-20 border-t border-surface-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Brand & Slogan */}
@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
           {/* Social Links from Palette Specification */}
           <div className="flex items-center gap-5 text-slate-300">
             <a
-              href="https://x.com/Naijapins27"
+              href="https://x.com/ideora_hq"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg hover:text-white hover:bg-white/10 transition-colors"
@@ -60,7 +60,7 @@ export const Footer: React.FC = () => {
               <MessageSquare className="h-5 w-5" />
             </a>
             <a
-              href="https://www.threads.net/@alpha.wolf2704"
+              href="https://www.threads.net/@ideora_hq"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg hover:text-white hover:bg-white/10 transition-colors"

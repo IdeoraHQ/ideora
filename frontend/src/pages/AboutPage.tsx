@@ -223,24 +223,24 @@ export const AboutPage: React.FC = () => {
               <Mail className="h-5 w-5" />
             </a>
             <a
-              href="https://x.com/Naijapins27"
+              href="https://x.com/ideora_hq"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-surface-border bg-surface-soft text-typography-navy hover:border-brand-royal/40 hover:text-brand-royal transition-colors"
-              aria-label="X (@Naijapins27)"
-              title="X (@Naijapins27)"
+              aria-label="X (@ideora_hq)"
+              title="X (@ideora_hq)"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
             <a
-              href="https://www.threads.net/@alpha.wolf2704"
+              href="https://www.threads.net/@ideora_hq"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-surface-border bg-surface-soft text-typography-navy hover:border-brand-royal/40 hover:text-brand-royal transition-colors"
-              aria-label="Threads (@alpha.wolf2704)"
-              title="Threads (@alpha.wolf2704)"
+              aria-label="Threads (@ideora_hq)"
+              title="Threads (@ideora_hq)"
             >
               <svg viewBox="0 0 192 192" fill="currentColor" className="h-4 w-4" aria-hidden="true">
                 <path d="M141.537 88.988a66.667 66.667 0 0 0-2.518-1.143c-1.482-27.307-16.403-42.94-41.457-43.1h-.34c-14.986 0-27.449 6.396-35.12 18.036l13.779 9.452c5.73-8.695 14.724-10.548 21.348-10.548h.229c8.249.053 14.474 2.452 18.503 7.129 2.932 3.405 4.893 8.111 5.864 14.05-7.314-1.243-15.224-1.626-23.68-1.14-23.82 1.371-39.134 15.264-38.105 34.568.522 9.792 5.4 18.216 13.735 23.719 7.047 4.652 16.124 6.927 25.557 6.412 12.458-.683 22.231-5.436 29.049-14.127 5.178-6.6 8.453-15.153 9.899-25.93 5.937 3.583 10.337 8.298 12.767 13.966 4.132 9.635 4.373 25.468-8.546 38.376-11.319 11.308-24.925 16.2-45.488 16.351-22.809-.169-40.06-7.484-51.275-21.742C35.236 139.966 29.808 120.682 29.605 96c.203-24.682 5.63-43.966 16.131-57.318C56.951 24.424 74.202 17.109 97.01 16.94c22.975.17 40.526 7.52 52.171 21.847 5.71 7.026 10.015 15.86 12.853 26.162l16.147-4.308c-3.44-12.68-8.853-23.606-16.219-32.668C147.036 9.607 125.202.195 97.07 0h-.113C68.882.195 47.292 9.643 32.788 28.08 19.882 44.485 13.224 67.315 13.001 95.932L13 96v.067c.224 28.617 6.882 51.447 19.788 67.854C47.292 182.358 68.882 191.806 96.957 192h.113c24.96-.173 42.554-6.708 57.048-21.19 18.963-18.945 18.392-42.691 12.142-57.27-4.484-10.454-13.033-18.945-24.723-24.552Zm-43.095 40.519c-10.44.588-21.286-4.098-21.82-14.135-.397-7.442 5.296-15.746 22.461-16.735 1.966-.113 3.895-.169 5.79-.169 6.235 0 12.068.606 17.37 1.765-1.978 24.702-13.58 28.713-23.801 29.274Z" />
