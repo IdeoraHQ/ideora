@@ -28,6 +28,8 @@ import { AdminReportsPage } from '@/pages/admin/AdminReportsPage';
 import { AdminProjectsPage } from '@/pages/admin/AdminProjectsPage';
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
+import { AdminAiConsolePage } from '@/pages/admin/AdminAiConsolePage';
+import { AiWorkspacePage } from '@/pages/AiWorkspacePage';
 import { FeedbackPage } from '@/pages/FeedbackPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
@@ -72,6 +74,11 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<MessagesPage />} />
       </Route>
 
+      {/* 5B. Ask ORA Workspace */}
+      <Route path="/ai" element={<DashboardLayout title="Ask ORA" breadcrumb="ORA" />}>
+        <Route index element={<AiWorkspacePage />} />
+      </Route>
+
       {/* 6. Projects Hub & Individual Project Workspaces */}
       <Route path="/projects" element={<DashboardLayout title="Projects Hub" breadcrumb="Projects" />}>
         <Route index element={<ProjectsPage />} />
@@ -101,6 +108,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="projects" element={<AdminProjectsPage />} />
           <Route path="audit-logs" element={<AdminAuditLogsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="ai" element={<AdminAiConsolePage />} />
         </Route>
       </Route>
 

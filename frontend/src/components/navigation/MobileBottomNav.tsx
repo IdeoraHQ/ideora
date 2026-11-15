@@ -20,6 +20,7 @@ import {
   Info,
   LogIn,
   LogOut,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/common';
@@ -56,6 +57,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
         { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Inbox },
         { label: 'Projects', to: '/projects', icon: FolderGit2 },
+        { label: 'Ask ORA', to: '/ai', icon: Sparkles },
         {
           label: 'Messages',
           to: '/messages',

@@ -509,14 +509,14 @@ export const MessagesPage: React.FC = () => {
           className={cn(
             'flex-1 flex flex-col min-w-0 min-h-0 bg-surface-soft overflow-hidden',
             selectedConversation
-              ? 'fixed inset-0 z-50 md:static md:inset-auto md:z-auto flex'
+              ? 'fixed inset-x-0 top-0 h-[100dvh] z-50 md:static md:inset-auto md:h-auto md:z-auto flex'
               : 'hidden md:flex'
           )}
         >
           {selectedConversation && activeOther ? (
             <>
               {/* Conversation Header */}
-              <header className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 bg-surface-white border-b border-surface-border shrink-0">
+              <header className="sticky top-0 z-20 flex items-center justify-between gap-3 px-3 sm:px-5 py-3 bg-surface-white border-b border-surface-border shrink-0">
                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <button
                     type="button"
@@ -624,7 +624,7 @@ export const MessagesPage: React.FC = () => {
               {/* Messages Scroll Container */}
               <div
                 ref={messagesScrollRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5"
+                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 sm:px-6 sm:py-5"
               >
                 {loadingMessages ? (
                   <div className="space-y-4 py-4" aria-busy="true" aria-label="Loading messages">

@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AppRoutes } from '@/routes';
 import { ContextualFeedbackPrompt } from '@/components/feedback/ContextualFeedbackPrompt';
+import { FloatingAiLauncher } from '@/components/ai/FloatingAiLauncher';
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
       <AuthProvider>
         <ThemeProvider>
           <AppRoutes />
+          <FloatingAiLauncher />
           <ContextualFeedbackPrompt />
         </ThemeProvider>
       </AuthProvider>

@@ -8,3 +8,4 @@ export * from './projects';
 export * from './admin';
 export * from './feedback';
 export * from './settings';
+export * from './ai';

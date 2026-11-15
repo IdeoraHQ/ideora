@@ -15,6 +15,7 @@ import {
   LogOut,
   ShieldCheck,
   MessageSquarePlus,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
@@ -52,6 +53,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
     { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
     { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Users },
     { label: 'Projects', to: '/projects', icon: FolderGit2 },
+    { label: 'Ask ORA', to: '/ai', icon: Sparkles },
     {
       label: 'Messages',
       to: '/messages',

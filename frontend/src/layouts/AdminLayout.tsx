@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   X,
+  Bot,
   type LucideIcon,
 } from 'lucide-react';
 import { IdeoraLogo } from '@/components/IdeoraLogo';
@@ -36,6 +37,12 @@ const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     description: 'Platform statistics and activity',
     to: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'AI Operations',
+    description: 'Analytics & platform insights',
+    to: '/admin/ai',
+    icon: Bot,
   },
   {
     label: 'Feedback',
