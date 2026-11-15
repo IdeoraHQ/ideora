@@ -1468,7 +1468,7 @@ export const IdeaDetailPage: React.FC = () => {
                       <p className="text-xs text-typography-slate truncate font-normal">
                         @{idea.author.username} &bull;{' '}
                         <span className="capitalize font-semibold text-brand-royal">
-                          {idea.author.role}
+                          {idea.author.role === 'admin' ? 'Founder' : idea.author.role}
                         </span>
                       </p>
                     </div>

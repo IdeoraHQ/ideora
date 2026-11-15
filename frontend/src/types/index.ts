@@ -92,7 +92,10 @@ export type NotificationItem = Database['public']['Tables']['notifications']['Ro
 
 // Domain models for Direct Messaging
 export type Conversation = Database['public']['Tables']['conversations']['Row'] & {
-  idea?: Pick<Database['public']['Tables']['ideas']['Row'], 'id' | 'title' | 'slug' | 'category' | 'status'> | null;
+  idea?: Pick<
+    Database['public']['Tables']['ideas']['Row'],
+    'id' | 'title' | 'slug' | 'summary' | 'category' | 'status'
+  > | null;
   creator?: UserProfile;
   requester?: UserProfile;
   collaboration_request?: Pick<

@@ -7,6 +7,7 @@ import { ExplorePage } from '@/pages/ExplorePage';
 import { PeoplePage } from '@/pages/PeoplePage';
 import { AboutPage } from '@/pages/AboutPage';
 import { AuthPage } from '@/pages/AuthPage';
+import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { CreateIdeaPage } from '@/pages/CreateIdeaPage';
@@ -38,6 +39,7 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       {/* 1. Dedicated Standalone Authentication & Account Security Pages */}
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 

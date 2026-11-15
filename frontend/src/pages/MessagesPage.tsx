@@ -2,28 +2,68 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   MessageSquare,
-  Search,
-  Send,
   ArrowLeft,
   ExternalLink,
-  Sparkles,
-  Check,
-  CheckCheck,
   AlertCircle,
-  Clock,
-  Shield,
   Layers,
+  PanelRightOpen,
+  PanelRightClose,
+  Info,
+  RefreshCw,
+  ChevronUp,
+  Loader2,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchUserConversations,
+  fetchConversationById,
   fetchConversationMessages,
   sendMessage,
+  editMessage,
+  softDeleteMessage,
   markConversationAsRead,
   subscribeToConversationMessages,
+  subscribeToUserConversationUpdates,
 } from '@/services/api';
-import type { Conversation, Message } from '@/types';
+import {
+  ConversationSidebar,
+  type ConversationFilter,
+} from '@/components/messages/ConversationSidebar';
+import { MessageBubble } from '@/components/messages/MessageBubble';
+import { MessageComposer } from '@/components/messages/MessageComposer';
+import { ConversationContextPanel } from '@/components/messages/ConversationContextPanel';
+import type { Conversation, Message, UserProfile } from '@/types';
 import { cn } from '@/utils/cn';
+
+const PAGE_SIZE = 50;
+
+function formatDateSeparator(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((startOfToday.getTime() - startOfDate.getTime()) / 86_400_000);
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+}
+
+function isSameCalendarDay(aIso: string, bIso: string): boolean {
+  const a = new Date(aIso);
+  const b = new Date(bIso);
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
 export const MessagesPage: React.FC = () => {
   const { isAuthenticated, profile } = useAuth();
@@ -34,122 +74,287 @@ export const MessagesPage: React.FC = () => {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [unavailableConversationId, setUnavailableConversationId] = useState<string | null>(null);
+
   const [messages, setMessages] = useState<Message[]>([]);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<ConversationFilter>('all');
 
   const [loadingConversations, setLoadingConversations] = useState(true);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
 
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  const [isContextOpen, setIsContextOpen] = useState(true);
+  const [isMobileContextOpen, setIsMobileContextOpen] = useState(false);
+
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll messages container to latest message
+  const isNearBottom = useCallback(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return true;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distanceFromBottom < 140;
+  }, []);
+
   const scrollToBottom = useCallback((smooth = false) => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: smooth ? 'smooth' : 'auto',
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'auto',
+      });
     });
   }, []);
 
-  // 1. Load all conversations on mount
-  const loadConversations = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoadingConversations(true);
-    setError(null);
-    try {
-      const { data, error: fetchErr } = await fetchUserConversations();
-      if (fetchErr) throw fetchErr;
-      const list = data || [];
-      setConversations(list);
-
-      // If URL specifies an ID, find and select it
-      if (activeIdFromUrl) {
-        const found = list.find((c) => c.id === activeIdFromUrl);
-        if (found) {
-          setSelectedConversation(found);
-        }
+  const getOtherParticipant = useCallback(
+    (conv: Conversation): UserProfile | undefined => {
+      if (profile?.id === conv.creator_id) {
+        return conv.requester;
       }
-    } catch (err) {
-      console.error('Failed to load conversations:', err);
-      setError('Unable to load conversations. Please check your network and try again.');
-    } finally {
-      setLoadingConversations(false);
-    }
-  }, [isAuthenticated, activeIdFromUrl]);
+      return conv.creator;
+    },
+    [profile?.id]
+  );
+
+  // 1. Load conversations list
+  const loadConversations = useCallback(
+    async (silent = false) => {
+      if (!isAuthenticated) return;
+      if (!silent) {
+        setLoadingConversations(true);
+        setConversationsError(null);
+      }
+      try {
+        const { data, error: fetchErr } = await fetchUserConversations();
+        if (fetchErr) throw fetchErr;
+        const list = data || [];
+        setConversations(list);
+
+        if (activeIdFromUrl) {
+          const found = list.find((c) => c.id === activeIdFromUrl);
+          if (found) {
+            setSelectedConversation(found);
+            setUnavailableConversationId(null);
+          } else {
+            // Double-check directly in case it wasn't in initial batch or unauthorized
+            const { data: singleConv } = await fetchConversationById(activeIdFromUrl);
+            if (singleConv) {
+              setSelectedConversation(singleConv);
+              setUnavailableConversationId(null);
+            } else {
+              setSelectedConversation(null);
+              setUnavailableConversationId(activeIdFromUrl);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load conversations:', err);
+        if (!silent) {
+          setConversationsError(
+            'Unable to load conversations. Please check your connection and try again.'
+          );
+        }
+      } finally {
+        if (!silent) setLoadingConversations(false);
+      }
+    },
+    [isAuthenticated, activeIdFromUrl]
+  );
 
   useEffect(() => {
-    void loadConversations();
+    void loadConversations(false);
   }, [loadConversations]);
 
-  // 2. Load message history when selected conversation changes
+  // Background realtime listener for conversation list updates
+  useEffect(() => {
+    if (!isAuthenticated || !profile?.id) return;
+    return subscribeToUserConversationUpdates(profile.id, () => {
+      void loadConversations(true);
+    });
+  }, [isAuthenticated, profile?.id, loadConversations]);
+
+  // 2. Load messages for selected conversation + subscribe to INSERT & UPDATE
   const selectedConvId = selectedConversation?.id;
-  const selectedConvUnread = selectedConversation?.unread_count;
+
+  const loadInitialMessages = useCallback(
+    async (convId: string) => {
+      setLoadingMessages(true);
+      setMessagesError(null);
+      setHasMoreMessages(false);
+      try {
+        const { data, hasMore, error: msgErr } = await fetchConversationMessages(convId, {
+          limit: PAGE_SIZE,
+        });
+        if (msgErr) throw msgErr;
+        setMessages(data || []);
+        setHasMoreMessages(hasMore);
+        scrollToBottom(false);
+
+        // Mark unread messages as read
+        void markConversationAsRead(convId).then(({ count }) => {
+          if (count > 0) {
+            setConversations((prev) =>
+              prev.map((c) => (c.id === convId ? { ...c, unread_count: 0 } : c))
+            );
+          }
+        });
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+        setMessagesError('Unable to load message history. Check your connection and try again.');
+      } finally {
+        setLoadingMessages(false);
+      }
+    },
+    [scrollToBottom]
+  );
 
   useEffect(() => {
     if (!selectedConvId) {
       setMessages([]);
+      setMessagesError(null);
+      setHasMoreMessages(false);
       return;
     }
 
     let isMounted = true;
-    const loadMessages = async () => {
-      setLoadingMessages(true);
-      try {
-        const { data, error: msgErr } = await fetchConversationMessages(selectedConvId);
-        if (msgErr) throw msgErr;
-        if (isMounted) {
-          setMessages(data || []);
-          setTimeout(() => scrollToBottom(false), 50);
+    void loadInitialMessages(selectedConvId);
 
-          // Mark conversation as read in database
-          if ((selectedConvUnread ?? 0) > 0) {
-            void markConversationAsRead(selectedConvId);
-            setConversations((prev) =>
-              prev.map((c) => (c.id === selectedConvId ? { ...c, unread_count: 0 } : c))
-            );
-          }
+    const unsubscribe = subscribeToConversationMessages(selectedConvId, {
+      onNewMessage: (newMsg) => {
+        if (!isMounted) return;
+        const shouldAutoScroll =
+          newMsg.sender_id === profile?.id || isNearBottom();
+
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === selectedConvId
+              ? {
+                  ...c,
+                  last_message: newMsg,
+                  last_message_at: newMsg.created_at,
+                  unread_count: 0,
+                }
+              : c
+          )
+        );
+
+        if (newMsg.sender_id !== profile?.id) {
+          void markConversationAsRead(selectedConvId);
         }
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      } finally {
-        if (isMounted) setLoadingMessages(false);
-      }
-    };
 
-    void loadMessages();
+        if (shouldAutoScroll) {
+          scrollToBottom(true);
+        }
+      },
+      onMessageUpdated: (updatedMsg) => {
+        if (!isMounted) return;
+        setMessages((prev) =>
+          prev.map((existing) => {
+            if (existing.id !== updatedMsg.id) return existing;
+            // Prevent deleted messages from ever being restored by stale events
+            const staysDeleted = Boolean(existing.deleted_at || updatedMsg.deleted_at);
+            return {
+              ...existing,
+              ...updatedMsg,
+              deleted_at: existing.deleted_at ?? updatedMsg.deleted_at,
+              body: staysDeleted ? '' : updatedMsg.body,
+              sender: existing.sender,
+            };
+          })
+        );
 
-    // 3. Realtime subscription for incoming messages
-    const unsubscribe = subscribeToConversationMessages(selectedConvId, (newMsg) => {
-      if (!isMounted) return;
-      setMessages((prev) => {
-        // Avoid duplicate insertion
-        if (prev.some((m) => m.id === newMsg.id)) return prev;
-        return [...prev, newMsg];
-      });
-
-      // Mark as read immediately if current user is the recipient
-      if (newMsg.sender_id !== profile?.id) {
-        void markConversationAsRead(selectedConvId);
-      }
-
-      setTimeout(() => scrollToBottom(true), 50);
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== selectedConvId || c.last_message?.id !== updatedMsg.id) {
+              return c;
+            }
+            const staysDeleted = Boolean(c.last_message.deleted_at || updatedMsg.deleted_at);
+            return {
+              ...c,
+              last_message: {
+                ...c.last_message,
+                ...updatedMsg,
+                deleted_at: c.last_message.deleted_at ?? updatedMsg.deleted_at,
+                body: staysDeleted ? '' : updatedMsg.body,
+              },
+            };
+          })
+        );
+      },
     });
 
     return () => {
       isMounted = false;
       unsubscribe();
     };
-  }, [selectedConvId, selectedConvUnread, profile?.id, scrollToBottom]);
+  }, [selectedConvId, profile?.id, loadInitialMessages, isNearBottom, scrollToBottom]);
 
-  // Handle selecting a conversation
+  // Load older paginated messages without losing scroll position
+  const handleLoadOlderMessages = async () => {
+    if (!selectedConvId || loadingOlder || !hasMoreMessages || messages.length === 0) {
+      return;
+    }
+    const oldest = messages[0];
+    const scrollEl = messagesScrollRef.current;
+    const prevScrollHeight = scrollEl?.scrollHeight ?? 0;
+
+    setLoadingOlder(true);
+    try {
+      const { data, hasMore, error: fetchErr } = await fetchConversationMessages(selectedConvId, {
+        limit: PAGE_SIZE,
+        before: oldest.created_at,
+      });
+      if (fetchErr) throw fetchErr;
+      if (data && data.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const uniqueOlder = data.filter((m) => !existingIds.has(m.id));
+          return [...uniqueOlder, ...prev];
+        });
+        requestAnimationFrame(() => {
+          if (scrollEl) {
+            const newScrollHeight = scrollEl.scrollHeight;
+            scrollEl.scrollTop += newScrollHeight - prevScrollHeight;
+          }
+        });
+      }
+      setHasMoreMessages(hasMore);
+    } catch (err) {
+      console.error('Failed to load older messages:', err);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
+    setUnavailableConversationId(null);
+    setSendError(null);
+    setIsMobileContextOpen(false);
     setSearchParams({ id: conv.id });
   };
 
-  // Handle message submission
+  const handleBackToList = () => {
+    setSelectedConversation(null);
+    setUnavailableConversationId(null);
+    setIsMobileContextOpen(false);
+    setSearchParams({});
+  };
+
+  // Send message — preserves inputText if sending fails
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!selectedConversation || !profile) return;
@@ -157,14 +362,14 @@ export const MessagesPage: React.FC = () => {
     const trimmed = inputText.trim();
     if (!trimmed || sending) return;
 
-    // Verify conversation is active
     const reqStatus = selectedConversation.collaboration_request?.status;
     if (reqStatus === 'declined' || reqStatus === 'withdrawn') {
-      alert(`Cannot send messages because this collaboration request is ${reqStatus}.`);
+      setSendError(`Cannot send messages because this collaboration request is ${reqStatus}.`);
       return;
     }
 
     setSending(true);
+    setSendError(null);
     try {
       const { data: newMsg, error: sendErr } = await sendMessage(
         selectedConversation.id,
@@ -172,26 +377,29 @@ export const MessagesPage: React.FC = () => {
       );
 
       if (sendErr) {
-        alert(sendErr.message || 'Failed to deliver message.');
-      } else if (newMsg) {
+        setSendError(sendErr.message || 'Failed to deliver message. Your text was preserved.');
+        return;
+      }
+
+      if (newMsg) {
         setInputText('');
+        const hydrated: Message = { ...newMsg, sender: profile };
         setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id)) return prev;
-          return [...prev, { ...newMsg, sender: profile }];
+          if (prev.some((m) => m.id === hydrated.id)) return prev;
+          return [...prev, hydrated];
         });
-        // Update last message in sidebar preview
         setConversations((prev) =>
           prev.map((c) =>
             c.id === selectedConversation.id
               ? {
                   ...c,
-                  last_message: newMsg,
-                  last_message_at: newMsg.created_at,
+                  last_message: hydrated,
+                  last_message_at: hydrated.created_at,
                 }
               : c
           )
         );
-        setTimeout(() => scrollToBottom(true), 50);
+        scrollToBottom(true);
       }
     } finally {
       setSending(false);
@@ -199,34 +407,54 @@ export const MessagesPage: React.FC = () => {
     }
   };
 
-  // Keyboard shortcut: Enter to send, Shift+Enter for newline
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      void handleSendMessage();
+  const handleEditMessage = async (
+    messageId: string,
+    newBody: string
+  ): Promise<string | null> => {
+    const { data: updated, error: editErr } = await editMessage(messageId, newBody);
+    if (editErr || !updated) {
+      return editErr?.message || 'Failed to update message. Please try again.';
     }
+
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, ...updated, sender: m.sender } : m))
+    );
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.last_message?.id === messageId
+          ? { ...c, last_message: { ...c.last_message, ...updated } }
+          : c
+      )
+    );
+    return null;
   };
 
-  // Helper to determine the "other" participant in the conversation
-  const getOtherParticipant = (conv: Conversation) => {
-    if (profile?.id === conv.creator_id) {
-      return conv.requester;
+  const handleDeleteMessage = async (messageId: string): Promise<string | null> => {
+    const { data: deleted, error: delErr } = await softDeleteMessage(messageId);
+    if (delErr || !deleted) {
+      return delErr?.message || 'Failed to delete message. Please try again.';
     }
-    return conv.creator;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? { ...m, ...deleted, body: '', sender: m.sender }
+          : m
+      )
+    );
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.last_message?.id === messageId
+          ? {
+              ...c,
+              last_message: { ...c.last_message, ...deleted, body: '' },
+            }
+          : c
+      )
+    );
+    return null;
   };
 
-  // Filter conversations by search term
-  const filteredConversations = conversations.filter((c) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    const other = getOtherParticipant(c);
-    const otherName = other?.full_name?.toLowerCase() || '';
-    const otherUser = other?.username?.toLowerCase() || '';
-    const ideaTitle = c.idea?.title?.toLowerCase() || '';
-    return otherName.includes(q) || otherUser.includes(q) || ideaTitle.includes(q);
-  });
-
-  // If not authenticated, show sign-in prompt
   if (!isAuthenticated) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
@@ -238,7 +466,7 @@ export const MessagesPage: React.FC = () => {
             Sign In to Access Messages
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-typography-slate leading-relaxed">
-            Direct messages are private communications between idea founders and applicants.
+            Direct messages are private workspaces between idea owners and collaborators.
           </p>
           <button
             type="button"
@@ -253,427 +481,376 @@ export const MessagesPage: React.FC = () => {
   }
 
   const activeOther = selectedConversation ? getOtherParticipant(selectedConversation) : null;
-  const isRequestClosed =
-    selectedConversation?.collaboration_request?.status === 'declined' ||
-    selectedConversation?.collaboration_request?.status === 'withdrawn';
+  const reqStatus = selectedConversation?.collaboration_request?.status;
+  const isRequestClosed = reqStatus === 'declined' || reqStatus === 'withdrawn';
 
   return (
-    <div className="h-[calc(100vh-8.5rem)] flex flex-col -mx-4 -my-6 sm:-mx-6 lg:-mx-8">
-      {/* Messages Workspace Container */}
-      <div className="flex-1 flex overflow-hidden bg-surface-white border-y border-surface-border">
-        {/* ========================================================================= */}
-        {/* PANEL 1: CONVERSATIONS SIDEBAR */}
-        {/* ========================================================================= */}
-        <div
+    <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] flex flex-col -mx-4 -mt-6 -mb-28 sm:-mx-6 md:-mb-8 lg:-mx-8 overflow-hidden">
+      <div className="flex-1 flex min-h-0 overflow-hidden bg-surface-white">
+        {/* LEFT PANEL: Conversations Sidebar */}
+        <ConversationSidebar
+          conversations={conversations}
+          selectedConversationId={selectedConversation?.id ?? null}
+          currentUserId={profile?.id}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filter={filter}
+          onFilterChange={setFilter}
+          loading={loadingConversations}
+          error={conversationsError}
+          onRetry={() => void loadConversations(false)}
+          onSelectConversation={handleSelectConversation}
+          getOtherParticipant={getOtherParticipant}
+        />
+
+        {/* CENTER PANEL: Active Conversation (Full-screen on mobile when selected) */}
+        <section
+          aria-label="Active conversation"
           className={cn(
-            'w-full md:w-80 lg:w-96 flex flex-col border-r border-surface-border bg-surface-soft shrink-0 transition-all',
-            selectedConversation ? 'hidden md:flex' : 'flex'
-          )}
-        >
-          {/* Sidebar Header & Search */}
-          <div className="p-4 border-b border-surface-border bg-surface-white space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-brand-royal" />
-                <h1 className="text-base font-semibold text-typography-navy font-heading">
-                  Direct Messages
-                </h1>
-              </div>
-              <span className="rounded-full bg-brand-ice px-2.5 py-0.5 text-[11px] font-bold text-brand-royal">
-                {conversations.length}
-              </span>
-            </div>
-
-            {/* Conversation Search Filter */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-typography-muted" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by participant or idea..."
-                className="w-full rounded-xl border border-surface-border bg-surface-soft py-1.5 pl-9 pr-3 text-xs text-typography-navy placeholder-typography-muted focus:bg-surface-white focus:outline-none focus:border-brand-royal transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Conversations Scrollable List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-surface-border/60">
-            {loadingConversations ? (
-              <div className="p-6 text-center text-xs text-typography-muted space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse flex items-center gap-3 p-2">
-                    <div className="h-10 w-10 rounded-full bg-surface-border/60 shrink-0" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-3 bg-surface-border/60 rounded w-1/2" />
-                      <div className="h-2.5 bg-surface-border/40 rounded w-3/4" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : error ? (
-              <div className="p-6 text-center">
-                <AlertCircle className="mx-auto h-6 w-6 text-functional-error mb-2" />
-                <p className="text-xs text-functional-error">{error}</p>
-                <button
-                  type="button"
-                  onClick={loadConversations}
-                  className="mt-3 text-xs font-semibold text-brand-royal hover:underline"
-                >
-                  Retry Loading
-                </button>
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="p-8 text-center text-xs text-typography-muted space-y-2">
-                <Sparkles className="mx-auto h-7 w-7 text-typography-muted opacity-50" />
-                <p className="font-medium text-typography-slate">
-                  {searchQuery ? 'No matching conversations' : 'No conversations yet'}
-                </p>
-                <p className="text-[11px] text-typography-muted leading-relaxed max-w-xs mx-auto">
-                  Direct conversations are automatically initiated when a collaboration request is submitted or reviewed.
-                </p>
-              </div>
-            ) : (
-              filteredConversations.map((conv) => {
-                const other = getOtherParticipant(conv);
-                const isSelected = selectedConversation?.id === conv.id;
-                const unread = conv.unread_count ?? 0;
-
-                return (
-                  <button
-                    key={conv.id}
-                    type="button"
-                    onClick={() => handleSelectConversation(conv)}
-                    className={cn(
-                      'w-full text-left p-3.5 flex items-start gap-3 transition-colors relative',
-                      isSelected
-                        ? 'bg-brand-ice/70 border-l-4 border-l-brand-royal'
-                        : 'bg-surface-white hover:bg-surface-light'
-                    )}
-                  >
-                    {/* Participant Avatar */}
-                    <div className="relative shrink-0">
-                      {other?.avatar_url ? (
-                        <img
-                          src={other.avatar_url}
-                          alt={other.full_name || 'Participant'}
-                          className="h-10 w-10 rounded-full object-cover border border-surface-border"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-royal text-white text-xs font-bold uppercase">
-                          {other?.full_name?.charAt(0) || other?.username?.charAt(0) || 'B'}
-                        </div>
-                      )}
-                      {unread > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-royal px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
-                          {unread > 9 ? '9+' : unread}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Text Details */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <span
-                          className={cn(
-                            'text-xs font-semibold truncate',
-                            unread > 0 ? 'text-typography-navy font-bold' : 'text-typography-navy'
-                          )}
-                        >
-                          {other?.full_name || `@${other?.username || 'user'}`}
-                        </span>
-                        <span className="text-[10px] text-typography-muted shrink-0">
-                          {new Date(conv.last_message_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </div>
-
-                      {/* Associated Idea or Purpose Badge */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-block truncate rounded bg-surface-soft px-1.5 py-0.5 text-[10px] font-medium text-typography-slate border border-surface-border/50">
-                          {conv.idea?.title || conv.collaboration_request?.purpose || 'Direct Collaboration'}
-                        </span>
-                      </div>
-
-                      {/* Last Message Preview */}
-                      <p
-                        className={cn(
-                          'text-xs truncate leading-normal',
-                          unread > 0
-                            ? 'font-medium text-typography-navy'
-                            : 'font-normal text-typography-slate'
-                        )}
-                      >
-                        {conv.last_message ? conv.last_message.body : 'Conversation started'}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* PANEL 2: ACTIVE CONVERSATION PANE */}
-        {/* ========================================================================= */}
-        <div
-          className={cn(
-            'flex-1 flex flex-col bg-surface-soft overflow-hidden',
-            !selectedConversation ? 'hidden md:flex' : 'flex'
+            'flex-1 flex flex-col min-w-0 min-h-0 bg-surface-soft overflow-hidden',
+            selectedConversation
+              ? 'fixed inset-0 z-50 md:static md:inset-auto md:z-auto flex'
+              : 'hidden md:flex'
           )}
         >
           {selectedConversation && activeOther ? (
             <>
-              {/* Active Conversation Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-surface-white border-b border-surface-border shrink-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Mobile Back Button */}
+              {/* Conversation Header */}
+              <header className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 bg-surface-white border-b border-surface-border shrink-0">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedConversation(null);
-                      setSearchParams({});
-                    }}
-                    className="md:hidden rounded-lg p-1 text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors shrink-0"
-                    title="Back to conversation list"
+                    onClick={handleBackToList}
+                    aria-label="Back to conversations"
+                    className="md:hidden rounded-xl p-1.5 text-typography-slate hover:bg-surface-soft hover:text-typography-navy transition-colors shrink-0"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
 
-                  {/* Other Participant Avatar */}
-                  <div className="shrink-0">
+                  <Link
+                    to={activeOther.username ? `/profile/${activeOther.username}` : '#'}
+                    className="shrink-0"
+                    aria-label={`View ${activeOther.full_name || activeOther.username}'s profile`}
+                  >
                     {activeOther.avatar_url ? (
                       <img
                         src={activeOther.avatar_url}
                         alt={activeOther.full_name || 'Participant'}
-                        className="h-10 w-10 rounded-full object-cover border border-surface-border"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover border border-surface-border"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-royal text-white text-xs font-bold uppercase">
+                      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-brand-royal/10 text-brand-royal border border-brand-royal/20 text-xs font-bold uppercase">
                         {activeOther.full_name?.charAt(0) || activeOther.username?.charAt(0) || 'U'}
                       </div>
                     )}
-                  </div>
+                  </Link>
 
-                  {/* Header Details */}
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <Link
-                        to={`/profile/${activeOther.username}`}
+                        to={activeOther.username ? `/profile/${activeOther.username}` : '#'}
                         className="text-sm font-semibold text-typography-navy hover:text-brand-royal transition-colors truncate"
                       >
                         {activeOther.full_name || `@${activeOther.username}`}
                       </Link>
-                      <span className="text-[11px] text-typography-muted truncate">
-                        (@{activeOther.username})
-                      </span>
-                      {selectedConversation.collaboration_request?.status && (
-                        <span
-                          className={cn(
-                            'rounded-full px-2 py-0.2 text-[10px] font-semibold capitalize',
-                            selectedConversation.collaboration_request.status === 'accepted'
-                              ? 'bg-functional-success-light text-functional-success'
-                              : selectedConversation.collaboration_request.status === 'pending'
-                              ? 'bg-functional-warning-light text-functional-warning'
-                              : 'bg-functional-error-light text-functional-error'
-                          )}
-                        >
-                          Request: {selectedConversation.collaboration_request.status}
+                      {activeOther.username && (
+                        <span className="hidden sm:inline text-xs text-typography-muted truncate">
+                          @{activeOther.username}
                         </span>
                       )}
                     </div>
 
-                    {/* Associated Idea or General Purpose Pill */}
                     {selectedConversation.idea ? (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[11px] text-typography-muted">Topic:</span>
+                      <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
                         <Link
                           to={`/ideas/${selectedConversation.idea.slug}`}
                           className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-royal hover:underline truncate"
                         >
-                          {selectedConversation.idea.title}
+                          <span className="truncate">{selectedConversation.idea.title}</span>
                           <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                         </Link>
+                        {selectedConversation.collaboration_request?.role?.role_title && (
+                          <span className="hidden sm:inline text-[11px] text-typography-muted truncate">
+                            · {selectedConversation.collaboration_request.role.role_title}
+                          </span>
+                        )}
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[11px] text-typography-muted">Purpose:</span>
-                        <span className="text-[11px] font-medium text-typography-navy truncate">
-                          {selectedConversation.collaboration_request?.purpose || 'Direct Collaboration'}
-                        </span>
-                      </div>
+                      <p className="text-[11px] text-typography-slate truncate mt-0.5">
+                        {selectedConversation.collaboration_request?.purpose || 'Direct Collaboration'}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                {/* Right: Security & Context Indicator */}
-                <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-typography-muted bg-surface-soft px-2.5 py-1 rounded-lg border border-surface-border/60 shrink-0">
-                  <Shield className="h-3 w-3 text-brand-royal" />
-                  <span>End-to-End Authorized</span>
-                </div>
-              </div>
+                {/* Right Header Actions: Toggle Context Panel */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileContextOpen(true)}
+                    aria-label="Open conversation details"
+                    className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface-border bg-surface-soft text-typography-navy hover:bg-surface-light transition-colors"
+                  >
+                    <Info className="h-4 w-4 text-brand-royal" />
+                  </button>
 
-              {/* Closed Request Warning Banner */}
+                  <button
+                    type="button"
+                    onClick={() => setIsContextOpen((prev) => !prev)}
+                    aria-label={isContextOpen ? 'Hide context panel' : 'Show context panel'}
+                    aria-pressed={isContextOpen}
+                    title={isContextOpen ? 'Hide details' : 'Show details'}
+                    className="hidden lg:inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface-border bg-surface-soft text-typography-slate hover:bg-surface-light hover:text-typography-navy transition-colors"
+                  >
+                    {isContextOpen ? (
+                      <PanelRightClose className="h-4 w-4" />
+                    ) : (
+                      <PanelRightOpen className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </header>
+
+              {/* Closed Request Banner */}
               {isRequestClosed && (
-                <div className="flex items-center gap-2 bg-functional-warning-light border-b border-functional-warning/20 px-4 py-2 text-xs text-functional-warning shrink-0">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
+                <div className="flex items-center gap-2 bg-functional-warning-light/80 border-b border-functional-warning/20 px-4 py-2 text-xs text-functional-warning shrink-0">
+                  <Lock className="h-3.5 w-3.5 shrink-0" />
                   <span>
-                    This collaboration request was {selectedConversation.collaboration_request?.status}. Messaging is disabled.
+                    This collaboration request was {reqStatus}. New messages and edits are disabled.
                   </span>
                 </div>
               )}
 
-              {/* Messages Scroll Area */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+              {/* Messages Scroll Container */}
+              <div
+                ref={messagesScrollRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5"
+              >
                 {loadingMessages ? (
-                  <div className="flex h-full items-center justify-center text-xs text-typography-muted">
-                    Loading messages...
+                  <div className="space-y-4 py-4" aria-busy="true" aria-label="Loading messages">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          'animate-pulse flex flex-col gap-1.5 max-w-[65%]',
+                          i % 2 === 0 ? 'ml-auto items-end' : 'mr-auto items-start'
+                        )}
+                      >
+                        <div className="h-10 w-48 sm:w-64 rounded-2xl bg-surface-border/60" />
+                        <div className="h-2.5 w-12 rounded bg-surface-border/40" />
+                      </div>
+                    ))}
+                  </div>
+                ) : messagesError ? (
+                  <div className="flex h-full flex-col items-center justify-center text-center p-6 space-y-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-functional-error-light text-functional-error">
+                      <AlertCircle className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1 max-w-sm">
+                      <p className="text-sm font-semibold text-typography-navy">
+                        Failed to load messages
+                      </p>
+                      <p className="text-xs text-typography-slate">{messagesError}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void loadInitialMessages(selectedConversation.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-white px-4 py-2 text-xs font-semibold text-typography-navy hover:bg-surface-light transition-colors"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Retry
+                    </button>
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-2">
+                  <div className="flex h-full flex-col items-center justify-center text-center p-6 space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-ice text-brand-royal">
                       <MessageSquare className="h-6 w-6" />
                     </div>
-                    <h3 className="text-sm font-semibold text-typography-navy font-heading">
-                      Direct Collaboration Workspace
-                    </h3>
-                    <p className="text-xs text-typography-slate max-w-sm leading-relaxed">
-                      {selectedConversation.idea ? (
-                        <>
-                          This conversation is linked to the collaboration application for{' '}
-                          <strong>{selectedConversation.idea.title}</strong>. Send a message to coordinate scope and expectations.
-                        </>
-                      ) : (
-                        <>
-                          This conversation is linked to your direct collaboration request
-                          {selectedConversation.collaboration_request?.purpose
-                            ? ` (${selectedConversation.collaboration_request.purpose})`
-                            : ''}
-                          . Send a message to start collaborating.
-                        </>
-                      )}
-                    </p>
+                    <div className="space-y-1 max-w-sm">
+                      <h2 className="text-sm font-semibold text-typography-navy font-heading">
+                        Start the conversation
+                      </h2>
+                      <p className="text-xs text-typography-slate leading-relaxed">
+                        {selectedConversation.idea ? (
+                          <>
+                            Align on scope, timeline, and next steps for{' '}
+                            <strong className="text-typography-navy">
+                              {selectedConversation.idea.title}
+                            </strong>
+                            .
+                          </>
+                        ) : (
+                          'Introduce yourself and share what you would like to build together.'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  messages.map((msg) => {
-                    const isMine = msg.sender_id === profile?.id;
-
-                    return (
-                      <div
-                        key={msg.id}
-                        className={cn(
-                          'flex flex-col max-w-[85%] sm:max-w-[70%]',
-                          isMine ? 'ml-auto items-end' : 'mr-auto items-start'
-                        )}
-                      >
-                        {/* Bubble */}
-                        <div
-                          className={cn(
-                            'rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed break-words shadow-2xs',
-                            isMine
-                              ? 'bg-brand-royal text-white rounded-br-xs'
-                              : 'bg-surface-white text-typography-navy border border-surface-border rounded-bl-xs'
-                          )}
+                  <div className="flex flex-col">
+                    {hasMoreMessages && (
+                      <div className="flex justify-center pb-4">
+                        <button
+                          type="button"
+                          onClick={() => void handleLoadOlderMessages()}
+                          disabled={loadingOlder}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-surface-border bg-surface-white px-3.5 py-1.5 text-xs font-medium text-typography-slate hover:bg-surface-light hover:text-typography-navy disabled:opacity-50 transition-colors shadow-2xs"
                         >
-                          <p className="whitespace-pre-wrap">{msg.body}</p>
-                        </div>
-
-                        {/* Timestamp & Read Indicator */}
-                        <div className="flex items-center gap-1 mt-1 px-1 text-[10px] text-typography-muted">
-                          <Clock className="h-2.5 w-2.5" />
-                          <span>
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                          {isMine && (
-                            <span
-                              title={msg.read_at ? 'Read by recipient' : 'Sent'}
-                              className="ml-0.5"
-                            >
-                              {msg.read_at ? (
-                                <CheckCheck className="h-3 w-3 text-brand-royal inline" />
-                              ) : (
-                                <Check className="h-3 w-3 text-typography-muted inline" />
-                              )}
-                            </span>
+                          {loadingOlder ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <ChevronUp className="h-3.5 w-3.5" />
                           )}
-                        </div>
+                          {loadingOlder ? 'Loading older messages...' : 'Load older messages'}
+                        </button>
                       </div>
-                    );
-                  })
+                    )}
+
+                    {messages.map((msg, index) => {
+                      const prev = index > 0 ? messages[index - 1] : null;
+                      const showDateSeparator =
+                        !prev || !isSameCalendarDay(prev.created_at, msg.created_at);
+
+                      const isGroupedWithPrevious =
+                        !showDateSeparator &&
+                        prev !== null &&
+                        prev.sender_id === msg.sender_id &&
+                        new Date(msg.created_at).getTime() - new Date(prev.created_at).getTime() <
+                          5 * 60 * 1000;
+
+                      return (
+                        <React.Fragment key={msg.id}>
+                          {showDateSeparator && (
+                            <div
+                              role="separator"
+                              className="my-4 flex items-center justify-center select-none"
+                            >
+                              <span className="rounded-full bg-surface-white border border-surface-border/80 px-3.5 py-1 text-[11px] font-medium text-typography-slate shadow-2xs">
+                                {formatDateSeparator(msg.created_at)}
+                              </span>
+                            </div>
+                          )}
+
+                          <MessageBubble
+                            message={msg}
+                            isMine={msg.sender_id === profile?.id}
+                            isGroupedWithPrevious={isGroupedWithPrevious}
+                            isRequestClosed={isRequestClosed}
+                            onEditMessage={handleEditMessage}
+                            onDeleteMessage={handleDeleteMessage}
+                          />
+                        </React.Fragment>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
-              {/* Message Composer Footer */}
-              <div className="p-3 sm:p-4 bg-surface-white border-t border-surface-border shrink-0">
-                <form onSubmit={handleSendMessage} className="space-y-2">
-                  <div className="relative flex items-end gap-2 rounded-2xl border border-surface-border bg-surface-soft p-1.5 focus-within:border-brand-royal focus-within:ring-2 focus-within:ring-brand-pale/50 transition-all">
-                    <textarea
-                      ref={textareaRef}
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      disabled={isRequestClosed || sending}
-                      placeholder={
-                        isRequestClosed
-                          ? 'Messaging is closed for this request.'
-                          : 'Write your message... (Enter to send, Shift+Enter for newline)'
-                      }
-                      rows={2}
-                      maxLength={5000}
-                      className="flex-1 bg-transparent px-2.5 py-1.5 text-xs sm:text-sm text-typography-navy placeholder-typography-muted resize-none focus:outline-none disabled:opacity-50"
-                    />
-
-                    <button
-                      type="submit"
-                      disabled={!inputText.trim() || isRequestClosed || sending}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-royal text-white shadow-sm hover:bg-brand-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                      title="Send message"
-                    >
-                      <Send className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between px-1 text-[10px] text-typography-muted">
-                    <span>Press Enter to send</span>
-                    <span>{inputText.length} / 5000</span>
-                  </div>
-                </form>
-              </div>
+              {/* Anchored Message Composer */}
+              <MessageComposer
+                value={inputText}
+                onChange={setInputText}
+                onSubmit={handleSendMessage}
+                sending={sending}
+                disabled={isRequestClosed}
+                disabledReason={
+                  isRequestClosed
+                    ? `Messaging is closed because this request was ${reqStatus}.`
+                    : undefined
+                }
+                sendError={sendError}
+                onDismissError={() => setSendError(null)}
+                textareaRef={textareaRef}
+              />
             </>
-          ) : (
-            /* Empty State: No conversation selected */
+          ) : unavailableConversationId ? (
+            /* Empty State: Unavailable / Unauthorized Conversation */
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-ice text-brand-royal shadow-sm">
-                <MessageSquare className="h-8 w-8" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-functional-warning-light text-functional-warning">
+                <AlertCircle className="h-7 w-7" />
               </div>
               <div className="space-y-1.5 max-w-md">
-                <h2 className="text-xl font-light text-typography-navy font-heading">
+                <h2 className="text-lg font-semibold text-typography-navy font-heading">
+                  Conversation Unavailable
+                </h2>
+                <p className="text-xs sm:text-sm text-typography-slate leading-relaxed">
+                  This conversation could not be found, or you do not have permission to view it.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-royal px-4 py-2 text-xs font-semibold text-white hover:bg-brand-deep transition-colors"
+              >
+                Return to Messages
+              </button>
+            </div>
+          ) : (
+            /* Empty State: No Conversation Selected on Desktop */
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-ice text-brand-royal">
+                <MessageSquare className="h-7 w-7" />
+              </div>
+              <div className="space-y-1.5 max-w-md">
+                <h2 className="text-lg font-semibold text-typography-navy font-heading">
                   Select a Conversation
                 </h2>
                 <p className="text-xs sm:text-sm text-typography-slate leading-relaxed">
-                  Choose a conversation from the sidebar or click <strong>Message</strong> on any collaboration request in your dashboard to start coordinating with builders.
+                  Choose a thread from the left to coordinate with founders and builders, or review pending requests in your workspace.
                 </p>
               </div>
-
-              <div className="pt-4 flex items-center gap-3 text-xs">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
                 <Link
                   to="/dashboard?tab=incoming"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-white px-4 py-2 font-semibold text-typography-navy hover:bg-surface-light transition-all shadow-2xs"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-white px-4 py-2 text-xs font-semibold text-typography-navy hover:bg-surface-light transition-colors shadow-2xs"
                 >
                   <Layers className="h-3.5 w-3.5 text-brand-royal" />
-                  View Collaboration Requests
+                  Collaboration Requests
+                </Link>
+                <Link
+                  to="/explore"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-royal px-4 py-2 text-xs font-semibold text-white hover:bg-brand-deep transition-colors"
+                >
+                  Discover Ideas
                 </Link>
               </div>
             </div>
           )}
-        </div>
+        </section>
+
+        {/* RIGHT PANEL: Collapsible Desktop Context Panel */}
+        {selectedConversation && isContextOpen && (
+          <div className="hidden lg:flex h-full">
+            <ConversationContextPanel
+              conversation={selectedConversation}
+              currentUserId={profile?.id}
+              onClose={() => setIsContextOpen(false)}
+            />
+          </div>
+        )}
+
+        {/* MOBILE/TABLET CONTEXT DRAWER */}
+        {selectedConversation && isMobileContextOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Conversation details"
+            className="fixed inset-0 z-[60] flex justify-end bg-black/40 backdrop-blur-[1px] lg:hidden"
+            onClick={() => setIsMobileContextOpen(false)}
+          >
+            <div
+              className="h-full w-full max-w-xs bg-surface-white shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ConversationContextPanel
+                conversation={selectedConversation}
+                currentUserId={profile?.id}
+                onClose={() => setIsMobileContextOpen(false)}
+                isMobileDrawer
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

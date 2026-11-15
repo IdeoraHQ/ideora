@@ -178,14 +178,52 @@ export async function signUpWithEmail(
 }
 
 /**
+ * Sanitize an internal redirect path to prevent open-redirect vulnerabilities.
+ * Only relative paths starting with a single '/' are permitted.
+ */
+export function sanitizeRedirectPath(rawPath?: string | null): string {
+  if (!rawPath) return '/dashboard';
+  const trimmed = rawPath.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+    return '/dashboard';
+  }
+  return trimmed;
+}
+
+/**
+ * Sign in via Google OAuth
+ */
+export async function signInWithGoogle(
+  nextPath?: string
+): Promise<{ error: Error | null }> {
+  try {
+    const safeNext = sanitizeRedirectPath(nextPath);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${getAuthBaseUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`,
+      },
+    });
+
+    if (error) throw error;
+    return { error: null };
+  } catch (err) {
+    return { error: err as Error };
+  }
+}
+
+/**
  * Sign in via GitHub OAuth
  */
-export async function signInWithGithub(): Promise<{ error: Error | null }> {
+export async function signInWithGithub(
+  nextPath?: string
+): Promise<{ error: Error | null }> {
   try {
+    const safeNext = sanitizeRedirectPath(nextPath);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${getAuthBaseUrl()}/dashboard`,
+        redirectTo: `${getAuthBaseUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`,
       },
     });
 

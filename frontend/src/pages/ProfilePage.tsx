@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Github,
@@ -23,12 +23,15 @@ import {
   Target,
   Clock,
   Plus,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SeoHead } from '@/components/seo/SeoHead';
 import {
   fetchProfile,
   updateCurrentProfile,
+  uploadUserAvatar,
   fetchUserIdeas,
   toggleIdeaUpvote,
   fetchUserUpvotedIdeaIds,
@@ -79,6 +82,8 @@ export const ProfilePage: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [existingGeneralReq, setExistingGeneralReq] = useState<CollaborationRequest | null>(null);
   const [showCollabModal, setShowCollabModal] = useState(false);
 
@@ -157,6 +162,41 @@ export const ProfilePage: React.FC = () => {
   const isOwnProfile = Boolean(
     currentUser && viewedProfile && currentUser.id === viewedProfile.id
   );
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || uploadingAvatar || !isOwnProfile) return;
+
+    setUploadingAvatar(true);
+    setSaveError(null);
+    setSaveMessage(null);
+
+    try {
+      const { publicUrl, error: uploadErr } = await uploadUserAvatar(file);
+      if (uploadErr || !publicUrl) {
+        setSaveError(uploadErr?.message || 'Failed to upload profile image.');
+        return;
+      }
+
+      const { error: updateErr } = await updateCurrentProfile({
+        avatar_url: publicUrl,
+      });
+
+      if (updateErr) {
+        setSaveError(updateErr.message || 'Failed to save new profile image.');
+        return;
+      }
+
+      setViewedProfile((prev) =>
+        prev ? { ...prev, avatar_url: publicUrl } : prev
+      );
+      await refreshProfile();
+      setSaveMessage('Profile image updated.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleCopyProfileLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -347,6 +387,19 @@ export const ProfilePage: React.FC = () => {
           </div>
         )}
 
+        {/* Error Notification (e.g. avatar upload failure outside edit form) */}
+        {!isEditing && saveError && (
+          <div className="flex items-center justify-between rounded-2xl border border-functional-error/30 bg-functional-error-light px-5 py-3.5 text-xs font-semibold text-functional-error shadow-sm">
+            <span className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {saveError}
+            </span>
+            <button type="button" onClick={() => setSaveError(null)} className="text-sm font-bold">
+              &times;
+            </button>
+          </div>
+        )}
+
         {/* 2. Main Identity Card with Integrated Cover Banner */}
         <div className="rounded-3xl border border-surface-border bg-surface-white shadow-sm overflow-hidden relative">
           {/* Cover Banner strictly contained inside the card without dividing border line */}
@@ -357,7 +410,7 @@ export const ProfilePage: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-surface-border -mt-14 sm:-mt-16">
               <div className="flex flex-col sm:flex-row sm:items-end gap-5">
                 {/* Avatar with White Ring - Elevated with z-20 and zero clipping or border cuts */}
-                <div className="relative z-20 shrink-0">
+                <div className="relative z-20 shrink-0 group">
                   {viewedProfile.avatar_url ? (
                     <img
                       src={viewedProfile.avatar_url}
@@ -369,6 +422,34 @@ export const ProfilePage: React.FC = () => {
                       {viewedProfile.full_name.charAt(0).toUpperCase()}
                     </div>
                   )}
+
+                  {isOwnProfile && (
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                        className="sr-only"
+                        aria-label="Upload new profile image"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        title="Change profile image"
+                        aria-label="Change profile image"
+                        className="absolute -bottom-1.5 -right-1.5 flex h-9 w-9 items-center justify-center rounded-xl border-2 border-surface-white bg-brand-royal text-white shadow-md hover:bg-brand-deep active:scale-95 transition-all disabled:opacity-70"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Camera className="h-4 w-4" />
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Identity & Status */}
@@ -378,10 +459,12 @@ export const ProfilePage: React.FC = () => {
                       {viewedProfile.full_name}
                     </h1>
 
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-ice border border-brand-pale px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-brand-royal capitalize">
-                      <Sparkles className="h-3 w-3" />
-                      {viewedProfile.role}
-                    </span>
+                    {viewedProfile.role !== 'admin' && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-brand-ice border border-brand-pale px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-brand-royal capitalize">
+                        <Sparkles className="h-3 w-3" />
+                        {viewedProfile.role}
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-sm text-typography-slate font-medium break-all">

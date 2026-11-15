@@ -24,7 +24,7 @@ export async function fetchUserConversations(): Promise<{
       .from('conversations')
       .select(`
         *,
-        idea:ideas(id, title, slug, category, status),
+        idea:ideas(id, title, slug, summary, category, status),
         creator:profiles!conversations_creator_id_fkey(*),
         requester:profiles!conversations_requester_id_fkey(*),
         collaboration_request:collaboration_requests(
@@ -33,7 +33,8 @@ export async function fetchUserConversations(): Promise<{
           message,
           role_id,
           request_type,
-          purpose
+          purpose,
+          role:idea_roles_needed(id, role_title, category, spots_available)
         )
       `)
       .or(`creator_id.eq.${user.id},requester_id.eq.${user.id}`)
@@ -115,7 +116,7 @@ export async function fetchConversationById(
       .from('conversations')
       .select(`
         *,
-        idea:ideas(id, title, slug, category, status),
+        idea:ideas(id, title, slug, summary, category, status),
         creator:profiles!conversations_creator_id_fkey(*),
         requester:profiles!conversations_requester_id_fkey(*),
         collaboration_request:collaboration_requests(
@@ -124,7 +125,8 @@ export async function fetchConversationById(
           message,
           role_id,
           request_type,
-          purpose
+          purpose,
+          role:idea_roles_needed(id, role_title, category, spots_available)
         )
       `)
       .eq('id', conversationId)
@@ -176,26 +178,42 @@ export async function getOrCreateConversation(
 }
 
 /**
- * Fetch chronological message history for a conversation.
+ * Fetch chronological message history for a conversation with cursor pagination.
+ * Fetches the newest `limit` messages (or `limit` messages older than `before`).
  */
 export async function fetchConversationMessages(
-  conversationId: string
-): Promise<{ data: Message[] | null; error: Error | null }> {
+  conversationId: string,
+  options?: { limit?: number; before?: string }
+): Promise<{ data: Message[] | null; hasMore: boolean; error: Error | null }> {
+  const limit = options?.limit ?? 50;
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('messages')
       .select(`
         *,
         sender:profiles(*)
       `)
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(limit + 1);
+
+    if (options?.before) {
+      query = query.lt('created_at', options.before);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
-    return { data: (data as unknown as Message[]) || [], error: null };
+    const rows = (data as unknown as Message[]) || [];
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    // Return in ascending chronological order
+    pageRows.reverse();
+
+    return { data: pageRows, hasMore, error: null };
   } catch (err) {
     console.error('[IDEORA] fetchConversationMessages error:', err);
-    return { data: null, error: err as Error };
+    return { data: null, hasMore: false, error: err as Error };
   }
 }
 
@@ -304,13 +322,84 @@ export async function fetchTotalUnreadMessagesCount(): Promise<number> {
 }
 
 /**
- * Realtime subscription helper for new messages in a conversation.
+ * Edit an existing message sent by the authenticated user.
+ * Ownership and authorization are enforced at the database level.
+ */
+export async function editMessage(
+  messageId: string,
+  body: string
+): Promise<{ data: Message | null; error: Error | null }> {
+  try {
+    const trimmed = body.trim();
+    if (!trimmed) {
+      throw new Error('Message cannot be empty');
+    }
+    if (trimmed.length > 5000) {
+      throw new Error('Message exceeds the 5,000 character limit');
+    }
+
+    const { data, error } = await supabase.rpc('edit_message', {
+      p_message_id: messageId,
+      p_body: trimmed,
+    });
+
+    if (error) throw error;
+    return { data: (data as unknown as Message) || null, error: null };
+  } catch (err) {
+    console.error('[IDEORA] editMessage error:', err);
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
+ * Soft-delete a message sent by the authenticated user.
+ * Scrubs message body and sets deleted_at in the database.
+ */
+export async function softDeleteMessage(
+  messageId: string
+): Promise<{ data: Message | null; error: Error | null }> {
+  try {
+    const { data, error } = await supabase.rpc('soft_delete_message', {
+      p_message_id: messageId,
+    });
+
+    if (error) throw error;
+    return { data: (data as unknown as Message) || null, error: null };
+  } catch (err) {
+    console.error('[IDEORA] softDeleteMessage error:', err);
+    return { data: null, error: err as Error };
+  }
+}
+
+/**
+ * Realtime subscription helper for new, edited, soft-deleted, and read messages
+ * in a specific conversation.
  */
 export function subscribeToConversationMessages(
   conversationId: string,
-  onNewMessage: (msg: Message) => void
+  callbacks: {
+    onNewMessage: (msg: Message) => void;
+    onMessageUpdated?: (msg: Message) => void;
+  }
 ): () => void {
   const channelName = `messages:${conversationId}`;
+
+  const hydrateSender = async (raw: Message): Promise<Message> => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', raw.sender_id)
+        .single();
+
+      return {
+        ...raw,
+        sender: profile || undefined,
+      };
+    } catch {
+      return raw;
+    }
+  };
 
   const channel = supabase
     .channel(channelName)
@@ -323,21 +412,60 @@ export function subscribeToConversationMessages(
         filter: `conversation_id=eq.${conversationId}`,
       },
       async (payload) => {
-        // Fetch sender profile details to hydrate the message
-        const raw = payload.new as Message;
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', raw.sender_id)
-            .single();
-
-          onNewMessage({
-            ...raw,
-            sender: profile || undefined,
+        const hydrated = await hydrateSender(payload.new as Message);
+        callbacks.onNewMessage(hydrated);
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        if (callbacks.onMessageUpdated) {
+          const updated = payload.new as Message;
+          callbacks.onMessageUpdated({
+            ...updated,
+            // Ensure deleted content is never exposed even in client state
+            body: updated.deleted_at ? '' : updated.body,
           });
-        } catch {
-          onNewMessage(raw);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * Subscribe to conversation list updates (e.g. new messages in other threads)
+ * so the sidebar updates unread counts and previews without full refetches.
+ */
+export function subscribeToUserConversationUpdates(
+  userId: string,
+  onConversationChanged: () => void
+): () => void {
+  const channel = supabase
+    .channel(`user-conversations:${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+      },
+      (payload) => {
+        const row = (payload.new || payload.old) as {
+          creator_id?: string;
+          requester_id?: string;
+        } | null;
+        if (row && (row.creator_id === userId || row.requester_id === userId)) {
+          onConversationChanged();
         }
       }
     )

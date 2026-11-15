@@ -10,6 +10,7 @@ import {
   getCurrentUserProfile,
   signInWithEmail,
   signUpWithEmail,
+  signInWithGoogle,
   signInWithGithub,
   signOutUser,
   type SignUpPayload,
@@ -24,7 +25,8 @@ interface AuthContextValue {
   signUp: (
     payload: SignUpPayload
   ) => Promise<{ error: Error | null; requiresEmailVerification?: boolean }>;
-  signInGithub: () => Promise<{ error: Error | null }>;
+  signInGoogle: (nextPath?: string) => Promise<{ error: Error | null }>;
+  signInGithub: (nextPath?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -109,8 +111,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { error, requiresEmailVerification };
   };
 
-  const signInGithub = async () => {
-    const { error } = await signInWithGithub();
+  const signInGoogle = async (nextPath?: string) => {
+    const { error } = await signInWithGoogle(nextPath);
+    return { error };
+  };
+
+  const signInGithub = async (nextPath?: string) => {
+    const { error } = await signInWithGithub(nextPath);
     return { error };
   };
 
@@ -127,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: Boolean(profile),
         signIn,
         signUp,
+        signInGoogle,
         signInGithub,
         signOut,
         refreshProfile,

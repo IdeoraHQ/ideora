@@ -396,6 +396,8 @@ export interface Database {
           created_at: string;
           updated_at: string;
           read_at: string | null;
+          edited_at: string | null;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -405,6 +407,8 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           read_at?: string | null;
+          edited_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -414,6 +418,8 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           read_at?: string | null;
+          edited_at?: string | null;
+          deleted_at?: string | null;
         };
         Relationships: [
           {
@@ -735,6 +741,19 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      edit_message: {
+        Args: {
+          p_message_id: string;
+          p_body: string;
+        };
+        Returns: Database['public']['Tables']['messages']['Row'];
+      };
+      soft_delete_message: {
+        Args: {
+          p_message_id: string;
+        };
+        Returns: Database['public']['Tables']['messages']['Row'];
+      };
       is_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;

@@ -264,7 +264,9 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
             </span>
             <span className="block text-[10px] text-typography-muted truncate">
               @{idea.author?.username || 'builder'} &bull;{' '}
-              <span className="capitalize">{idea.author?.role || 'Founder'}</span>
+              <span className="capitalize">
+                {idea.author?.role === 'admin' ? 'Founder' : idea.author?.role || 'Founder'}
+              </span>
             </span>
           </div>
         </Link>
