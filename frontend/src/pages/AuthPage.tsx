@@ -80,7 +80,7 @@ export const AuthPage: React.FC = () => {
           return;
         }
       }
-      navigate(redirectTo);
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError((err as Error).message || 'Authentication failed');
     } finally {

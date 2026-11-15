@@ -180,7 +180,7 @@ export const AiWorkspacePage: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => navigate('/auth', { state: { from: '/ai' } })}
+            onClick={() => navigate('/auth', { state: { from: '/ai' }, replace: true })}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-royal px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-deep transition-colors"
           >
             Sign In or Sign Up
@@ -384,7 +384,7 @@ export const AiWorkspacePage: React.FC = () => {
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(isAuthenticated ? '/dashboard' : '/explore')}
               aria-label="Go back"
               className="md:hidden rounded-xl p-1.5 text-typography-slate hover:bg-surface-soft hover:text-typography-navy transition-colors shrink-0"
             >
