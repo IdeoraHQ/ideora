@@ -56,12 +56,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* 2. Main Application Viewport */}
       <div className="flex flex-1 flex-col min-w-0">
-        {/* Top Header */}
-        <DashboardHeader
-          title={title}
-          breadcrumb={breadcrumb}
-          unreadMessagesCount={unreadMessagesCount}
-        />
+        {/* Top Header (hidden on small screens during active Ask ORA conversation) */}
+        <div className={isAuthenticated && location.pathname.startsWith('/ai') ? 'hidden md:block' : undefined}>
+          <DashboardHeader
+            title={title}
+            breadcrumb={breadcrumb}
+            unreadMessagesCount={unreadMessagesCount}
+          />
+        </div>
 
         {/* Main Content (pb-28 ensures mobile content never hides behind bottom nav) */}
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-28 md:pb-8">
