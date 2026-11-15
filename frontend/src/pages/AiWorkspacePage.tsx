@@ -54,6 +54,7 @@ export const AiWorkspacePage: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
+  const [mobileIdeaPickerOpen, setMobileIdeaPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -378,9 +379,9 @@ export const AiWorkspacePage: React.FC = () => {
 
       {/* Main Active Conversation Pane (Messages-style, fixed full-viewport on mobile) */}
       <section className="fixed inset-x-0 top-0 h-[100dvh] z-50 md:static md:inset-auto md:h-auto md:z-auto flex-1 flex flex-col min-w-0 min-h-0 bg-surface-soft overflow-hidden">
-        {/* Sticky Conversation Header */}
-        <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2.5 px-3 sm:px-5 py-3 bg-surface-white border-b border-surface-border shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {/* Sticky Conversation Header (Single clean row on mobile & desktop) */}
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-2 px-3 sm:px-5 py-2.5 sm:py-3 bg-surface-white border-b border-surface-border shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -389,59 +390,102 @@ export const AiWorkspacePage: React.FC = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <button
-              type="button"
-              onClick={() => setMobileHistoryOpen(true)}
-              aria-label="Open conversation history"
-              className="md:hidden rounded-xl border border-surface-border bg-surface-soft p-2 text-typography-slate hover:text-typography-navy transition-colors shrink-0"
-            >
-              <History className="h-4 w-4" />
-            </button>
 
-            <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-brand-royal/10 text-brand-royal border border-brand-royal/20 shrink-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-brand-royal/10 text-brand-royal border border-brand-royal/20 shrink-0">
               <Sparkles className="h-4 w-4" />
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-surface-white" />
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-semibold text-typography-navy font-heading truncate">
-                  Ask ORA
-                </h1>
-                <span className="rounded-full bg-brand-ice px-2 py-0.5 text-[10px] font-semibold text-brand-royal shrink-0">
-                  Companion
-                </span>
-              </div>
+              <h1 className="text-sm font-semibold text-typography-navy font-heading truncate leading-tight">
+                Ask ORA
+              </h1>
               <p className="text-[11px] text-typography-slate truncate">
                 Your intelligent companion inside Ideora.
               </p>
             </div>
           </div>
 
-          {/* Optional Idea Context Selector */}
-          {myIdeas.length > 0 && (
-            <div className="flex items-center gap-2 max-w-full">
-              <Lightbulb className="h-3.5 w-3.5 text-brand-royal shrink-0" />
-              <CustomSelect
-                value={selectedIdeaId}
-                onChange={setSelectedIdeaId}
-                disabled={Boolean(activeConversation)}
-                placeholder="No idea attached"
-                className="w-[190px] sm:w-[230px]"
-                triggerClassName="rounded-xl bg-surface-soft px-3 py-1.5 text-xs text-typography-navy"
-                menuClassName="right-0 left-auto min-w-[240px]"
-                options={[
-                  { label: 'No idea attached', value: '' },
-                  ...myIdeas.map((idea) => ({
-                    label: idea.title,
-                    value: idea.id,
-                    badge: idea.status.replace(/_/g, ' '),
-                  })),
-                ]}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Desktop/Tablet Idea Context Selector */}
+            {myIdeas.length > 0 && (
+              <div className="hidden sm:flex items-center gap-2">
+                <Lightbulb className="h-3.5 w-3.5 text-brand-royal shrink-0" />
+                <CustomSelect
+                  value={selectedIdeaId}
+                  onChange={setSelectedIdeaId}
+                  disabled={Boolean(activeConversation)}
+                  placeholder="No idea attached"
+                  className="w-[210px]"
+                  triggerClassName="rounded-xl bg-surface-soft px-3 py-1.5 text-xs text-typography-navy"
+                  menuClassName="right-0 left-auto min-w-[240px]"
+                  options={[
+                    { label: 'No idea attached', value: '' },
+                    ...myIdeas.map((idea) => ({
+                      label: idea.title,
+                      value: idea.id,
+                      badge: idea.status.replace(/_/g, ' '),
+                    })),
+                  ]}
+                />
+              </div>
+            )}
+
+            {/* Mobile Idea Context Toggle */}
+            {myIdeas.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setMobileIdeaPickerOpen((prev) => !prev)}
+                aria-label="Attach an idea"
+                title="Attach an idea"
+                className={cn(
+                  'sm:hidden flex h-9 w-9 items-center justify-center rounded-full border transition-colors shrink-0',
+                  selectedIdeaId || mobileIdeaPickerOpen
+                    ? 'border-brand-royal/40 bg-brand-royal/10 text-brand-royal'
+                    : 'border-surface-border bg-surface-soft text-typography-slate hover:text-typography-navy'
+                )}
+              >
+                <Lightbulb className="h-4 w-4" />
+              </button>
+            )}
+
+            {/* Mobile History Button */}
+            <button
+              type="button"
+              onClick={() => setMobileHistoryOpen(true)}
+              aria-label="Open conversation history"
+              title="Conversations"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-full border border-surface-border bg-surface-soft text-typography-slate hover:text-typography-navy transition-colors shrink-0"
+            >
+              <History className="h-4 w-4" />
+            </button>
+          </div>
         </header>
+
+        {/* Mobile Expandable Idea Context Strip */}
+        {myIdeas.length > 0 && (mobileIdeaPickerOpen || selectedIdeaId) && (
+          <div className="sm:hidden flex items-center gap-2 px-3 py-2 bg-surface-white/95 border-b border-surface-border shrink-0">
+            <Lightbulb className="h-3.5 w-3.5 text-brand-royal shrink-0" />
+            <CustomSelect
+              value={selectedIdeaId}
+              onChange={(val) => {
+                setSelectedIdeaId(val);
+                if (!val) setMobileIdeaPickerOpen(false);
+              }}
+              disabled={Boolean(activeConversation)}
+              placeholder="No idea attached"
+              className="flex-1 min-w-0"
+              triggerClassName="rounded-xl bg-surface-soft px-3 py-1.5 text-xs text-typography-navy"
+              options={[
+                { label: 'No idea attached', value: '' },
+                ...myIdeas.map((idea) => ({
+                  label: idea.title,
+                  value: idea.id,
+                  badge: idea.status.replace(/_/g, ' '),
+                })),
+              ]}
+            />
+          </div>
+        )}
 
         {/* Scrollable Messages Area */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 sm:px-6 sm:py-5 space-y-4">

@@ -7,12 +7,19 @@ export type ShortcutKey = 'all' | 'recent' | 'collaborators' | 'adoption';
 interface IdeaDiscoveryShortcutsProps {
   activeShortcut: ShortcutKey;
   onSelect: (key: ShortcutKey) => void;
+  counts?: {
+    all?: number;
+    recent?: number;
+    collaborators?: number;
+    adoption?: number;
+  };
   className?: string;
 }
 
 export const IdeaDiscoveryShortcuts: React.FC<IdeaDiscoveryShortcutsProps> = ({
   activeShortcut,
   onSelect,
+  counts,
   className,
 }) => {
   const shortcuts = [
@@ -21,24 +28,31 @@ export const IdeaDiscoveryShortcuts: React.FC<IdeaDiscoveryShortcutsProps> = ({
       label: 'All Ideas',
       icon: Sparkles,
       description: 'Full ecosystem',
+      badge: counts?.all !== undefined ? `${counts.all} active` : undefined,
     },
     {
       key: 'recent' as ShortcutKey,
       label: 'Recently Published',
       icon: Sparkles,
       description: 'Latest concepts',
+      badge: counts?.recent !== undefined ? `${counts.recent} new` : undefined,
     },
     {
       key: 'collaborators' as ShortcutKey,
       label: 'Seeking Collaborators',
       icon: Users,
       description: 'Actively recruiting builders',
+      badge:
+        counts?.collaborators !== undefined
+          ? `${counts.collaborators} open`
+          : undefined,
     },
     {
       key: 'adoption' as ShortcutKey,
       label: 'Open for Adoption / Co-Founder',
       icon: Award,
       description: 'Early vision needing co-owners',
+      badge: counts?.adoption !== undefined ? `${counts.adoption}` : undefined,
     },
   ];
 
@@ -68,10 +82,24 @@ export const IdeaDiscoveryShortcuts: React.FC<IdeaDiscoveryShortcutsProps> = ({
               <Icon className="h-4 w-4" />
             </div>
 
-            <div className="min-w-0">
-              <span className="text-xs font-medium block truncate text-typography-navy">
-                {sc.label}
-              </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-xs font-medium block truncate text-typography-navy">
+                  {sc.label}
+                </span>
+                {sc.badge && (
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                      isActive
+                        ? 'bg-brand-royal/15 text-brand-royal'
+                        : 'bg-surface-soft text-typography-slate border border-surface-border'
+                    )}
+                  >
+                    {sc.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-normal text-typography-slate truncate block">
                 {sc.description}
               </span>

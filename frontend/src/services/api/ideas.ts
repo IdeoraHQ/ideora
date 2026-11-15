@@ -517,3 +517,51 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
     };
   }
 }
+
+export interface RecentIdeaDiscussion {
+  id: string;
+  content: string;
+  created_at: string;
+  author: {
+    id: string;
+    full_name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  idea: {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+  };
+}
+
+/**
+ * Fetch recent comments on published ideas for the Explore Community Feed.
+ */
+export async function fetchRecentIdeaDiscussions(
+  limit = 4
+): Promise<{ data: RecentIdeaDiscussion[]; error: Error | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('idea_comments')
+      .select(`
+        id,
+        content,
+        created_at,
+        author:profiles(id, full_name, username, avatar_url),
+        idea:ideas!inner(id, title, slug, status)
+      `)
+      .neq('idea.status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return {
+      data: (data as unknown as RecentIdeaDiscussion[]) || [],
+      error: null,
+    };
+  } catch (err) {
+    return { data: [], error: err as Error };
+  }
+}

@@ -32,6 +32,7 @@ import {
   fetchProfile,
   updateCurrentProfile,
   uploadUserAvatar,
+  uploadUserCover,
   fetchUserIdeas,
   toggleIdeaUpvote,
   fetchUserUpvotedIdeaIds,
@@ -84,6 +85,8 @@ export const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [existingGeneralReq, setExistingGeneralReq] = useState<CollaborationRequest | null>(null);
   const [showCollabModal, setShowCollabModal] = useState(false);
 
@@ -195,6 +198,63 @@ export const ProfilePage: React.FC = () => {
       setSaveMessage('Profile image updated.');
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || uploadingCover || !isOwnProfile) return;
+
+    setUploadingCover(true);
+    setSaveError(null);
+    setSaveMessage(null);
+
+    try {
+      const { publicUrl, error: uploadErr } = await uploadUserCover(file);
+      if (uploadErr || !publicUrl) {
+        setSaveError(uploadErr?.message || 'Failed to upload cover image.');
+        return;
+      }
+
+      const { error: updateErr } = await updateCurrentProfile({
+        cover_url: publicUrl,
+      });
+
+      if (updateErr) {
+        setSaveError(updateErr.message || 'Failed to save cover image.');
+        return;
+      }
+
+      setViewedProfile((prev) =>
+        prev ? { ...prev, cover_url: publicUrl } : prev
+      );
+      await refreshProfile();
+      setSaveMessage('Cover image updated.');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleRemoveCover = async () => {
+    if (uploadingCover || !isOwnProfile || !viewedProfile?.cover_url) return;
+    setUploadingCover(true);
+    setSaveError(null);
+    setSaveMessage(null);
+
+    try {
+      const { error: updateErr } = await updateCurrentProfile({
+        cover_url: null,
+      });
+      if (updateErr) {
+        setSaveError(updateErr.message || 'Failed to remove cover image.');
+        return;
+      }
+      setViewedProfile((prev) => (prev ? { ...prev, cover_url: null } : prev));
+      await refreshProfile();
+      setSaveMessage('Cover image removed.');
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -403,7 +463,59 @@ export const ProfilePage: React.FC = () => {
         {/* 2. Main Identity Card with Integrated Cover Banner */}
         <div className="rounded-3xl border border-surface-border bg-surface-white shadow-sm overflow-hidden relative">
           {/* Cover Banner strictly contained inside the card without dividing border line */}
-          <div className="h-32 sm:h-40 w-full bg-gradient-to-r from-brand-ice/80 via-brand-pale/40 to-brand-ice/90" />
+          <div className="relative h-36 sm:h-48 w-full bg-gradient-to-r from-brand-ice/80 via-brand-pale/40 to-brand-ice/90 overflow-hidden">
+            {viewedProfile.cover_url && (
+              <img
+                src={viewedProfile.cover_url}
+                alt={`${viewedProfile.full_name} cover`}
+                className="h-full w-full object-cover"
+              />
+            )}
+
+            {isOwnProfile && (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleCoverUpload}
+                  disabled={uploadingCover}
+                  className="sr-only"
+                  aria-label="Upload cover image"
+                />
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-surface-white/90 backdrop-blur-md border border-surface-border/80 px-3 py-1.5 text-xs font-semibold text-typography-navy shadow-sm hover:bg-surface-white transition-all disabled:opacity-70"
+                >
+                  {uploadingCover ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-royal" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5 text-brand-royal" />
+                  )}
+                  <span>
+                    {uploadingCover
+                      ? 'Uploading...'
+                      : viewedProfile.cover_url
+                        ? 'Change Cover'
+                        : 'Add Cover'}
+                  </span>
+                </button>
+                {viewedProfile.cover_url && !uploadingCover && (
+                  <button
+                    type="button"
+                    onClick={() => void handleRemoveCover()}
+                    aria-label="Remove cover image"
+                    title="Remove cover image"
+                    className="inline-flex items-center justify-center rounded-xl bg-surface-white/90 backdrop-blur-md border border-surface-border/80 p-1.5 text-typography-slate shadow-sm hover:text-functional-error hover:bg-surface-white transition-all"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Profile Identity Body */}
           <div className="p-6 sm:p-8 pt-0">

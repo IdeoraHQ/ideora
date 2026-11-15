@@ -46,6 +46,7 @@ export interface Database {
           username: string;
           full_name: string;
           avatar_url: string | null;
+          cover_url: string | null;
           bio: string | null;
           skills: string[];
           interests: string[];
@@ -65,6 +66,7 @@ export interface Database {
           username: string;
           full_name: string;
           avatar_url?: string | null;
+          cover_url?: string | null;
           bio?: string | null;
           skills?: string[];
           interests?: string[];
@@ -84,6 +86,7 @@ export interface Database {
           username?: string;
           full_name?: string;
           avatar_url?: string | null;
+          cover_url?: string | null;
           bio?: string | null;
           skills?: string[];
           interests?: string[];

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
+import { PresenceProvider } from '@/context/PresenceContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AppRoutes } from '@/routes';
 import { ContextualFeedbackPrompt } from '@/components/feedback/ContextualFeedbackPrompt';
@@ -26,11 +27,13 @@ export const App: React.FC = () => {
     >
       <ScrollToTop />
       <AuthProvider>
-        <ThemeProvider>
-          <AppRoutes />
-          <FloatingAiLauncher />
-          <ContextualFeedbackPrompt />
-        </ThemeProvider>
+        <PresenceProvider>
+          <ThemeProvider>
+            <AppRoutes />
+            <FloatingAiLauncher />
+            <ContextualFeedbackPrompt />
+          </ThemeProvider>
+        </PresenceProvider>
       </AuthProvider>
     </BrowserRouter>
   );

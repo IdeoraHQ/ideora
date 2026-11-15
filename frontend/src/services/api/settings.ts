@@ -3,6 +3,7 @@ import type { AccountDeletionRequest, ThemePreference, UserSettings } from '@/ty
 
 const ALLOWED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_COVER_BYTES = 4 * 1024 * 1024; // 4 MB
 
 /**
  * Fetch the authenticated user's persisted notification settings.
@@ -128,12 +129,14 @@ export async function updateThemePreference(
   }
 }
 
-/**
- * Upload an avatar image to the existing 'avatars' storage bucket and return its public URL.
- */
-export async function uploadUserAvatar(
-  file: File
+async function uploadProfileImage(
+  file: File,
+  kind: 'avatar' | 'cover',
+  maxBytes: number
 ): Promise<{ publicUrl: string | null; error: Error | null }> {
+  const label = kind === 'cover' ? 'Cover image' : 'Avatar';
+  const maxMb = Math.round(maxBytes / (1024 * 1024));
+
   try {
     const {
       data: { user },
@@ -145,10 +148,10 @@ export async function uploadUserAvatar(
     }
 
     if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
-      throw new Error('Avatar must be a PNG, JPEG, or WebP image.');
+      throw new Error(`${label} must be a PNG, JPEG, or WebP image.`);
     }
-    if (file.size > MAX_AVATAR_BYTES) {
-      throw new Error('Avatar image must be 2 MB or smaller.');
+    if (file.size > maxBytes) {
+      throw new Error(`${label} must be ${maxMb} MB or smaller.`);
     }
 
     const ext =
@@ -157,7 +160,7 @@ export async function uploadUserAvatar(
         : file.type === 'image/webp'
           ? 'webp'
           : 'jpg';
-    const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const filePath = `${user.id}/${kind}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
@@ -173,6 +176,24 @@ export async function uploadUserAvatar(
   } catch (err) {
     return { publicUrl: null, error: err as Error };
   }
+}
+
+/**
+ * Upload an avatar image to the existing 'avatars' storage bucket and return its public URL.
+ */
+export async function uploadUserAvatar(
+  file: File
+): Promise<{ publicUrl: string | null; error: Error | null }> {
+  return uploadProfileImage(file, 'avatar', MAX_AVATAR_BYTES);
+}
+
+/**
+ * Upload a profile cover banner image to the 'avatars' storage bucket and return its public URL.
+ */
+export async function uploadUserCover(
+  file: File
+): Promise<{ publicUrl: string | null; error: Error | null }> {
+  return uploadProfileImage(file, 'cover', MAX_COVER_BYTES);
 }
 
 /**
