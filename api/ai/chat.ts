@@ -48,7 +48,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
     console.error('[IDEORA AI] /api/ai/chat error:', err);
     return res.status(500).json({
-      error: (err as Error)?.message || 'Unexpected AI server error.',
+      error: 'Unexpected AI server error. Please try again shortly.',
     });
   }
 }

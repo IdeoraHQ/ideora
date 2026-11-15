@@ -88,7 +88,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
     console.error('[IDEORA AI] /api/ai/conversations error:', err);
     return res.status(500).json({
-      error: (err as Error)?.message || 'Unable to load AI conversations.',
+      error: 'Unable to load AI conversations right now.',
     });
   }
 }

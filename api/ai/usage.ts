@@ -25,7 +25,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
     console.error('[IDEORA AI] /api/ai/usage error:', err);
     return res.status(500).json({
-      error: (err as Error)?.message || 'Unable to fetch AI usage.',
+      error: 'Unable to fetch AI usage right now.',
     });
   }
 }
