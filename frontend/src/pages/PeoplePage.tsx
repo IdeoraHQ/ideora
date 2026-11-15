@@ -107,7 +107,7 @@ export const PeoplePage: React.FC = () => {
 
   const handleCollaborateClick = (person: DiscoverablePerson) => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/auth', { state: { from: '/people' } });
       return;
     }
     setModalRecipient({

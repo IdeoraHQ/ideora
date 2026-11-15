@@ -510,7 +510,7 @@ export const ProfilePage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     if (!currentUser) {
-                      navigate('/login');
+                      navigate('/auth');
                       return;
                     }
                     setShowCollabModal(true);
@@ -1072,7 +1072,7 @@ export const ProfilePage: React.FC = () => {
                     type="button"
                     onClick={() => {
                       if (!currentUser) {
-                        navigate('/login');
+                        navigate('/auth');
                         return;
                       }
                       setShowCollabModal(true);

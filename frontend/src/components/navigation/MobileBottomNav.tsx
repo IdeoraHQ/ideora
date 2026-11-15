@@ -174,81 +174,139 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         </div>
       )}
 
-      {/* Fixed Bottom Navigation Bar */}
+      {/* Fixed Notched Bottom Navigation Bar */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-surface-border bg-surface-white/95 backdrop-blur-md px-2 pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 pb-[env(safe-area-inset-bottom)] bg-transparent pointer-events-none"
         aria-label="Mobile navigation"
       >
-        <div className="grid grid-cols-5 items-center h-16 max-w-md mx-auto">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              cn(
-                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
-                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
-              )
-            }
+        <div className="relative max-w-md mx-auto pointer-events-auto">
+          {/* Frosted Notched Bar Background */}
+          <svg
+            viewBox="0 0 375 68"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-full w-full text-surface-white/95 drop-shadow-[0_-6px_20px_rgba(15,23,42,0.14)]"
           >
-            <Home className="h-5 w-5" />
-            <span>Home</span>
-          </NavLink>
+            <path
+              d="M 0,22 Q 0,0 22,0 L 141,0 C 155,0 157,28 187.5,28 C 218,28 220,0 234,0 L 353,0 Q 375,0 375,22 L 375,68 L 0,68 Z"
+              fill="currentColor"
+            />
+            <path
+              d="M 0,22 Q 0,0 22,0 L 141,0 C 155,0 157,28 187.5,28 C 218,28 220,0 234,0 L 353,0 Q 375,0 375,22"
+              fill="none"
+              stroke="currentColor"
+              className="text-surface-border/90"
+              strokeWidth="1.2"
+            />
+          </svg>
 
-          <NavLink
-            to="/explore"
-            className={({ isActive }) =>
-              cn(
-                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
-                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
-              )
-            }
-          >
-            <Compass className="h-5 w-5" />
-            <span>Explore</span>
-          </NavLink>
-
-          {/* Center Floating Publish Button */}
-          <div className="flex items-center justify-center">
-            <Link
-              to="/ideas/new"
-              className="flex h-11 w-11 -mt-4 items-center justify-center rounded-2xl bg-brand-royal text-white shadow-lg shadow-brand-royal/30 hover:bg-brand-deep active:scale-95 transition-all"
-              aria-label="Publish Idea"
+          <div className="relative z-10 grid grid-cols-5 items-end h-[68px] px-2 pb-2">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-medium transition-all',
+                  isActive
+                    ? 'text-brand-royal font-semibold'
+                    : 'text-typography-slate hover:text-typography-navy'
+                )
+              }
             >
-              <Plus className="h-6 w-6" />
-            </Link>
-          </div>
+              {({ isActive }) => (
+                <>
+                  <Home
+                    className={cn(
+                      'h-5 w-5 transition-transform',
+                      isActive && 'drop-shadow-[0_0_8px_rgba(37,99,235,0.4)]'
+                    )}
+                  />
+                  <span>Home</span>
+                </>
+              )}
+            </NavLink>
 
-          <NavLink
-            to="/people"
-            className={({ isActive }) =>
-              cn(
-                'flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
-                isActive ? 'text-brand-royal font-semibold' : 'text-typography-slate'
-              )
-            }
-          >
-            <Users className="h-5 w-5" />
-            <span>People</span>
-          </NavLink>
+            <NavLink
+              to="/explore"
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-medium transition-all',
+                  isActive
+                    ? 'text-brand-royal font-semibold'
+                    : 'text-typography-slate hover:text-typography-navy'
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Compass
+                    className={cn(
+                      'h-5 w-5 transition-transform',
+                      isActive && 'drop-shadow-[0_0_8px_rgba(37,99,235,0.4)]'
+                    )}
+                  />
+                  <span>Explore</span>
+                </>
+              )}
+            </NavLink>
 
-          <button
-            type="button"
-            onClick={() => setMoreOpen(true)}
-            className={cn(
-              'relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
-              moreOpen || isMoreRouteActive || location.pathname.startsWith(profilePath)
-                ? 'text-brand-royal font-semibold'
-                : 'text-typography-slate'
-            )}
-          >
-            <div className="relative">
-              {unreadMessagesCount + effectiveNotifCount > 0 ? (
-                <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-brand-royal" />
-              ) : null}
-              <MoreHorizontal className="h-5 w-5" />
+            {/* Center Floating Circular Create Button */}
+            <div className="flex flex-col items-center justify-end pb-1">
+              <Link
+                to="/ideas/new"
+                className="group flex h-14 w-14 -mt-8 items-center justify-center rounded-full bg-gradient-to-br from-[#38BDF8] via-brand-royal to-[#4338CA] text-white shadow-[0_6px_22px_rgba(37,99,235,0.48)] ring-2 ring-white/25 hover:brightness-110 active:scale-95 transition-all"
+                aria-label="Create Idea"
+              >
+                <Plus className="h-6 w-6 stroke-[2.25] transition-transform group-hover:rotate-90 duration-200" />
+              </Link>
+              <span className="mt-1 text-[10px] font-semibold text-typography-navy">
+                Create
+              </span>
             </div>
-            <span>More</span>
-          </button>
+
+            <NavLink
+              to="/people"
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-medium transition-all',
+                  isActive
+                    ? 'text-brand-royal font-semibold'
+                    : 'text-typography-slate hover:text-typography-navy'
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Users
+                    className={cn(
+                      'h-5 w-5 transition-transform',
+                      isActive && 'drop-shadow-[0_0_8px_rgba(37,99,235,0.4)]'
+                    )}
+                  />
+                  <span>People</span>
+                </>
+              )}
+            </NavLink>
+
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className={cn(
+                'relative flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-medium transition-all',
+                moreOpen || isMoreRouteActive || location.pathname.startsWith(profilePath)
+                  ? 'text-brand-royal font-semibold'
+                  : 'text-typography-slate hover:text-typography-navy'
+              )}
+            >
+              <div className="relative">
+                {unreadMessagesCount + effectiveNotifCount > 0 ? (
+                  <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-brand-royal" />
+                ) : null}
+                <MoreHorizontal className="h-5 w-5" />
+              </div>
+              <span>More</span>
+            </button>
+          </div>
         </div>
       </nav>
     </>
