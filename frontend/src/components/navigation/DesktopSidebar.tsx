@@ -95,9 +95,14 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-lg font-light tracking-tight text-typography-navy font-heading">
-                IDEORA
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-light tracking-tight text-typography-navy font-heading">
+                  IDEORA
+                </span>
+                <span className="rounded-full border border-brand-royal/25 bg-brand-ice/80 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-brand-royal">
+                  Beta
+                </span>
+              </div>
               <span className="text-[10px] font-semibold text-typography-muted -mt-0.5 tracking-wider uppercase">
                 Collaboration Platform
               </span>

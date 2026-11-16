@@ -14,9 +14,14 @@ export const Footer: React.FC = () => {
               <IdeoraLogo size={40} />
             </div>
             <div>
-              <p className="text-2xl font-light tracking-tight text-white font-heading">
-                IDEORA
-              </p>
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <p className="text-2xl font-light tracking-tight text-white font-heading">
+                  IDEORA
+                </p>
+                <span className="rounded-full border border-brand-light/30 bg-brand-light/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-brand-light">
+                  Beta
+                </span>
+              </div>
               <p className="text-sm font-normal text-slate-300">
                 Where ideas find their builders.
               </p>

@@ -57,7 +57,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* 2. Main Application Viewport */}
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top Header (hidden on small screens during active Ask ORA conversation) */}
-        <div className={isAuthenticated && location.pathname.startsWith('/ai') ? 'hidden md:block' : undefined}>
+        <div
+          className={
+            isAuthenticated && location.pathname.startsWith('/ai')
+              ? 'hidden md:block md:sticky md:top-0 md:z-30'
+              : 'sticky top-0 z-30'
+          }
+        >
           <DashboardHeader
             title={title}
             breadcrumb={breadcrumb}

@@ -40,6 +40,7 @@ export const AuthPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('founder');
   const [skills, setSkills] = useState<string[]>(['fullstack']);
   const [bio, setBio] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationEmailSent, setVerificationEmailSent] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +66,11 @@ export const AuthPage: React.FC = () => {
         const { error: signInErr } = await signIn(email, password);
         if (signInErr) throw signInErr;
       } else {
+        if (!acceptedTerms) {
+          throw new Error(
+            'You must accept the Terms of Service and Privacy Policy to create an account.'
+          );
+        }
         const { error: signUpErr, requiresEmailVerification } = await signUp({
           email,
           password,
@@ -124,9 +130,14 @@ export const AuthPage: React.FC = () => {
           <div className="text-brand-royal group-hover:scale-105 transition-transform">
             <IdeoraLogo size={32} />
           </div>
-          <span className="text-xl font-light tracking-tight text-typography-navy font-heading">
-            IDEORA
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-light tracking-tight text-typography-navy font-heading">
+              IDEORA
+            </span>
+            <span className="rounded-full border border-brand-royal/25 bg-brand-ice/80 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-brand-royal">
+              Beta
+            </span>
+          </div>
         </Link>
         <Link
           to="/"
@@ -390,6 +401,35 @@ export const AuthPage: React.FC = () => {
               />
             </div>
           </div>
+
+          {mode === 'signup' && (
+            <label className="flex items-start gap-2.5 rounded-xl border border-surface-border bg-surface-soft/60 p-3 text-xs text-typography-slate cursor-pointer select-none">
+              <input
+                type="checkbox"
+                required
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-surface-border text-brand-royal focus:ring-brand-royal/40 shrink-0"
+              />
+              <span className="leading-relaxed">
+                I agree to the{' '}
+                <Link
+                  to="/terms"
+                  className="font-semibold text-brand-royal hover:underline"
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  to="/privacy"
+                  className="font-semibold text-brand-royal hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
+          )}
 
           <button
             type="submit"

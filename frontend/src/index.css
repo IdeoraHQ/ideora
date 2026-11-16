@@ -109,7 +109,7 @@ html[data-theme="dark"],
   --color-brand-royal: 59 130 246;
   --color-brand-deep: 37 99 235;
   --color-brand-light: 96 165 250;
-  --color-brand-pale: 30 58 138;
+  --color-brand-pale: 25 45 96;
   --color-brand-ice: 23 37 84;
 
   /* Sophisticated Dark Navy / Charcoal Surfaces */
@@ -117,7 +117,7 @@ html[data-theme="dark"],
   --color-surface-white: 17 24 39;
   --color-surface-light: 30 41 59;
   --color-surface-tint: 15 23 42;
-  --color-surface-border: 39 51 73;
+  --color-surface-border: 25 34 54;
 
   /* High-Contrast Readable Typography */
   --color-typography-navy: 241 245 249;

@@ -120,8 +120,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5 text-xs text-typography-muted">
-            <Link to="/dashboard" className="hover:text-brand-royal transition-colors">
-              IDEORA
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 hover:text-brand-royal transition-colors"
+            >
+              <span>IDEORA</span>
+              <span className="rounded-full border border-brand-royal/25 bg-brand-ice/80 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-widest text-brand-royal leading-none">
+                Beta
+              </span>
             </Link>
             <span>/</span>
             <span className="text-typography-slate font-medium truncate max-w-[140px] sm:max-w-xs">

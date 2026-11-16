@@ -107,9 +107,12 @@ export const Navbar: React.FC = () => {
           <div className="text-brand-royal group-hover:scale-105 transition-transform">
             <IdeoraLogo size={34} />
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <span className="text-2xl font-light tracking-tight text-typography-navy font-heading">
               IDEORA
+            </span>
+            <span className="rounded-full border border-brand-royal/25 bg-brand-ice/80 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-brand-royal">
+              Beta
             </span>
           </div>
         </Link>
