@@ -53,6 +53,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   const moreLinks = isAuthenticated
     ? [
+        { label: 'Ideora Match', to: '/match', icon: Sparkles },
         { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
         { label: 'My Ideas', to: '/dashboard?tab=ideas', icon: Lightbulb },
         { label: 'Collaborations', to: '/dashboard?tab=incoming', icon: Inbox },

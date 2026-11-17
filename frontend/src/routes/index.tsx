@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { HomePage } from '@/pages/HomePage';
 import { ExplorePage } from '@/pages/ExplorePage';
 import { PeoplePage } from '@/pages/PeoplePage';
+import { IdeoraMatchPage } from '@/pages/IdeoraMatchPage';
 import { AboutPage } from '@/pages/AboutPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
@@ -49,6 +50,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="explore" element={<ExplorePage />} />
+        <Route path="match" element={<IdeoraMatchPage />} />
         <Route path="people" element={<PeoplePage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="ideas/new" element={<CreateIdeaPage />} />

@@ -8,7 +8,9 @@ export type AiToolName =
   | 'get_user_idea'
   | 'get_platform_analytics'
   | 'navigate_to_ideora_page'
-  | 'get_user_workspace_context';
+  | 'get_user_workspace_context'
+  | 'find_matching_builders_for_idea'
+  | 'find_matching_projects_for_user';
 
 export interface AuthenticatedCaller {
   userId: string;

@@ -209,7 +209,7 @@ export interface Database {
           role_id: string | null;
           requester_id: string;
           recipient_id: string | null;
-          request_type: 'idea_based' | 'general';
+          request_type: 'idea_based' | 'general' | 'role_invite';
           purpose: string | null;
           skills_offered: string[];
           message: string;
@@ -223,7 +223,7 @@ export interface Database {
           role_id?: string | null;
           requester_id: string;
           recipient_id?: string | null;
-          request_type?: 'idea_based' | 'general';
+          request_type?: 'idea_based' | 'general' | 'role_invite';
           purpose?: string | null;
           skills_offered?: string[];
           message: string;
@@ -237,7 +237,7 @@ export interface Database {
           role_id?: string | null;
           requester_id?: string;
           recipient_id?: string | null;
-          request_type?: 'idea_based' | 'general';
+          request_type?: 'idea_based' | 'general' | 'role_invite';
           purpose?: string | null;
           skills_offered?: string[];
           message?: string;

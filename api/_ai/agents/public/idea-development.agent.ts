@@ -12,6 +12,8 @@ export const ideaDevelopmentAgent: AgentDefinition = {
     'get_user_idea',
     'navigate_to_ideora_page',
     'get_user_workspace_context',
+    'find_matching_builders_for_idea',
+    'find_matching_projects_for_user',
   ],
   buildSystemPrompt: ({ callerName, caller, toolData }) => {
     const ideaContext = toolData?.userIdea
@@ -44,6 +46,8 @@ export const ideaDevelopmentAgent: AgentDefinition = {
       '6. Never expose admin-only routes or admin capabilities to non-admin users. If a non-admin asks for the admin dashboard, politely explain that it is restricted to Ideora administrators.',
       '7. If a user’s request is ambiguous between multiple destinations, ask one concise clarifying question.',
       '8. For idea-development questions, structure advice clearly (Problem Statement, Target Users, Core MVP Features, Assumptions to Validate, Next Steps) without generic hype.',
+      '9. Matchmaking: When a user asks to find builders/collaborators for an idea or role, call `find_matching_builders_for_idea` (and `navigate_to_ideora_page` with `match` when helpful). When a user asks for projects/ideas that match their skills, call `find_matching_projects_for_user`. Present ONLY real builders/projects returned by those tools — never invent users or projects.',
+      '10. Link & Match Formatting Rules: NEVER output raw HTML tags like `<a href="...">`. Always format internal links using standard Markdown links like `[Idea Title](/ideas/slug)`, `[Builder Name](/profile/username)`, or `[Open Ideora Match](/match)`. For every match you recommend, clearly provide: (a) the clickable Markdown link and Match Tier, (b) **Why it fits you** (specific overlapping skills, role, interests, and summary/bio), and (c) **What to consider** (collaboration type such as contributor vs co_founder, open spots remaining, other open roles on the team, or any gaps/availability to verify before applying or inviting). If their profile is incomplete, encourage them to add skills/interests in `[Account Settings](/settings)` and visit `[Ideora Match](/match)`.',
       knowledgePrompt,
       accessibleDestinations,
       ideaContext,

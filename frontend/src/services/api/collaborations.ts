@@ -33,13 +33,23 @@ export async function submitCollaborationRequest(
       throw new Error('You must be signed in to request collaboration');
     }
 
+    const requestType =
+      payload.request_type === 'role_invite'
+        ? 'role_invite'
+        : payload.idea_id
+          ? 'idea_based'
+          : 'general';
     const isIdeaBased = Boolean(payload.idea_id);
-    if (!isIdeaBased && !payload.recipient_id) {
+    if ((requestType === 'general' || requestType === 'role_invite') && !payload.recipient_id) {
       throw new Error('Please select a recipient for your collaboration request.');
     }
 
     if (payload.recipient_id && payload.recipient_id === user.id) {
-      throw new Error('You cannot send a collaboration request to yourself.');
+      throw new Error(
+        requestType === 'role_invite'
+          ? 'You cannot invite yourself to your own idea.'
+          : 'You cannot send a collaboration request to yourself.'
+      );
     }
 
     const { data, error } = await supabase
@@ -48,8 +58,10 @@ export async function submitCollaborationRequest(
         idea_id: payload.idea_id || null,
         role_id: isIdeaBased ? payload.role_id || null : null,
         recipient_id: payload.recipient_id || null,
-        request_type: isIdeaBased ? 'idea_based' : 'general',
-        purpose: payload.purpose?.trim() || (isIdeaBased ? null : 'General Collaboration'),
+        request_type: requestType,
+        purpose:
+          payload.purpose?.trim() ||
+          (requestType === 'general' ? 'General Collaboration' : null),
         skills_offered: payload.skills_offered ?? [],
         requester_id: user.id,
         message: payload.message.trim(),
@@ -60,9 +72,11 @@ export async function submitCollaborationRequest(
     if (error) {
       if (error.code === '23505') {
         throw new Error(
-          isIdeaBased
-            ? 'You have already submitted an application for this role.'
-            : 'You already have a pending collaboration request with this person.'
+          requestType === 'role_invite'
+            ? 'You already have a pending invitation for this builder on this role.'
+            : isIdeaBased
+              ? 'You have already submitted an application for this role.'
+              : 'You already have a pending collaboration request with this person.'
         );
       }
       throw error;
@@ -115,7 +129,26 @@ export async function fetchUserSentRequests(
 }
 
 /**
- * Fetch incoming collaboration requests (both idea-based for user's ideas AND direct general requests)
+ * Send a founder-initiated role invitation to a discoverable builder
+ */
+export async function sendRoleInvitation(payload: {
+  idea_id: string;
+  role_id?: string | null;
+  recipient_id: string;
+  message: string;
+}): Promise<{ data: CollaborationRequest | null; error: Error | null }> {
+  return submitCollaborationRequest({
+    idea_id: payload.idea_id,
+    role_id: payload.role_id || undefined,
+    recipient_id: payload.recipient_id,
+    request_type: 'role_invite',
+    message: payload.message,
+  });
+}
+
+/**
+ * Fetch incoming collaboration requests (idea applications, role invitations, and general requests)
+ * Excludes requests/invitations sent by the current user (`requester_id != userId`).
  */
 export async function fetchFounderIncomingRequests(
   userId: string
@@ -131,6 +164,7 @@ export async function fetchFounderIncomingRequests(
     let query = supabase
       .from('collaboration_requests')
       .select(COLLAB_SELECT)
+      .neq('requester_id', userId)
       .order('created_at', { ascending: false });
 
     if (ideaIds.length > 0) {

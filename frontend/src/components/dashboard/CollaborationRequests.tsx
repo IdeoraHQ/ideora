@@ -23,12 +23,12 @@ export const CollaborationRequests: React.FC<CollaborationRequestsProps> = ({
   const pendingRequests = requests.filter((r) => r.status === 'pending');
 
   return (
-    <div className="rounded-2xl border border-surface-border bg-surface-white p-6 shadow-sm">
-      <div className="flex items-center justify-between border-b border-surface-border/70 pb-4 mb-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-light text-typography-navy font-heading flex items-center gap-2">
-            <Inbox className="h-5 w-5 text-brand-royal" />
-            <span>Pending Requests</span>
+    <div className="rounded-2xl border border-surface-border bg-surface-white p-4 sm:p-6 shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-surface-border/70 pb-4 mb-4">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-2xl font-light text-typography-navy font-heading flex items-center gap-2">
+            <Inbox className="h-5 w-5 text-brand-royal shrink-0" />
+            <span className="truncate">Pending Requests</span>
           </h2>
           <p className="text-xs font-normal text-typography-slate mt-0.5">
             Builders requesting to join your team
@@ -37,7 +37,7 @@ export const CollaborationRequests: React.FC<CollaborationRequestsProps> = ({
 
         <Link
           to="/dashboard?tab=incoming"
-          className="text-xs font-semibold text-brand-royal hover:text-brand-deep flex items-center gap-1 transition-colors"
+          className="text-xs font-semibold text-brand-royal hover:text-brand-deep flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap pt-1"
         >
           <span>All ({requests.length})</span>
           <ArrowUpRight className="h-3.5 w-3.5" />

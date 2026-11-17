@@ -53,7 +53,7 @@ export interface SubmitCollaborationPayload {
   idea_id?: string | null;
   role_id?: string;
   recipient_id?: string;
-  request_type?: 'idea_based' | 'general';
+  request_type?: 'idea_based' | 'general' | 'role_invite';
   purpose?: string;
   skills_offered?: string[];
   message: string;

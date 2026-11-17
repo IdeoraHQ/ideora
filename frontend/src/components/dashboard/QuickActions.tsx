@@ -47,8 +47,8 @@ export const QuickActions: React.FC = () => {
   ];
 
   return (
-    <div className="rounded-2xl border border-surface-border bg-surface-white p-6 shadow-sm">
-      <h2 className="text-xl sm:text-2xl font-light text-typography-navy font-heading mb-1">
+    <div className="rounded-2xl border border-surface-border bg-surface-white p-4 sm:p-6 shadow-sm">
+      <h2 className="text-lg sm:text-2xl font-light text-typography-navy font-heading mb-1">
         Quick Actions
       </h2>
       <p className="text-xs font-normal text-typography-slate mb-4">
@@ -62,7 +62,7 @@ export const QuickActions: React.FC = () => {
             <Link
               key={act.title}
               to={act.to}
-              className="flex items-center justify-between p-3.5 rounded-xl border border-surface-border/70 bg-surface-soft hover:bg-surface-white hover:border-brand-light/80 hover:shadow-sm transition-all group"
+              className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-surface-border/70 bg-surface-soft hover:bg-surface-white hover:border-brand-light/80 hover:shadow-sm transition-all group min-w-0"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-white border border-surface-border shadow-2xs group-hover:border-brand-pale">

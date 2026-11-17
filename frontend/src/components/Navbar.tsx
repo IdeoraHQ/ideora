@@ -141,6 +141,17 @@ export const Navbar: React.FC = () => {
             Explore Ideas
           </Link>
           <Link
+            to="/match"
+            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              isActive('/match')
+                ? 'bg-brand-ice text-brand-royal'
+                : 'text-typography-slate hover:text-typography-navy hover:bg-surface-light'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            Ideora Match
+          </Link>
+          <Link
             to="/people"
             className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
               isActive('/people')

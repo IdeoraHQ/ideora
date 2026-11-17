@@ -21,6 +21,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
+  assessBuilderProfileCompleteness,
+  rankIdeasForBuilder,
+} from '@/utils/matching';
+import {
   fetchUserIdeas,
   fetchFounderIncomingRequests,
   fetchUserSentRequests,
@@ -87,9 +91,8 @@ export const DashboardPage: React.FC = () => {
     if (sentRes.data) setSentRequests(sentRes.data);
     setUpvotedIds(upvotedRes || []);
     if (recRes.data) {
-      // Recommend ideas not created by current user
-      const filtered = recRes.data.filter((i) => i.creator_id !== profile.id);
-      setRecommendedIdeas(filtered.slice(0, 2));
+      const matched = rankIdeasForBuilder(profile, recRes.data);
+      setRecommendedIdeas(matched.slice(0, 2).map((m) => m.idea));
     }
     setLoading(false);
   }, [profile]);
@@ -288,7 +291,7 @@ export const DashboardPage: React.FC = () => {
         /* Responsive Two-Column Layout (Desktop: 2 cols, Tablet/Mobile: 1 col) */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Primary Column (8 cols on desktop) */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 min-w-0 space-y-6">
             {/* Recent Ideas */}
             <RecentIdeas ideas={myIdeas} loading={loading} />
 
@@ -300,7 +303,7 @@ export const DashboardPage: React.FC = () => {
             />
 
             {/* Recommended Ideas Section */}
-            {recommendedIdeas.length > 0 && (
+            {recommendedIdeas.length > 0 ? (
               <div className="rounded-2xl border border-surface-border bg-surface-white p-6 shadow-sm">
                 <div className="flex items-center justify-between border-b border-surface-border/70 pb-4 mb-4">
                   <div>
@@ -309,14 +312,14 @@ export const DashboardPage: React.FC = () => {
                       <span>Recommended for You</span>
                     </h2>
                     <p className="text-xs font-normal text-typography-slate mt-0.5">
-                      Promising early-stage projects seeking your skill set
+                      Matched to your skills, interests, and preferred roles
                     </p>
                   </div>
                   <Link
-                    to="/explore"
+                    to="/match"
                     className="text-xs font-semibold text-brand-royal hover:text-brand-deep flex items-center gap-1"
                   >
-                    <span>Explore more</span>
+                    <span>Open Ideora Match</span>
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -332,11 +335,30 @@ export const DashboardPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-            )}
+            ) : profile && assessBuilderProfileCompleteness(profile).isIncomplete ? (
+              <div className="rounded-2xl border border-surface-border bg-surface-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-medium text-typography-navy font-heading flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-brand-royal" />
+                    <span>Unlock Personalized Project Matches</span>
+                  </h2>
+                  <p className="text-xs text-typography-slate mt-1">
+                    Add your skills, interests, and preferred roles so Ideora Match can recommend projects that fit you.
+                  </p>
+                </div>
+                <Link
+                  to="/settings"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-royal px-4 py-2 text-xs font-semibold text-white hover:bg-brand-deep transition-colors shrink-0 self-start sm:self-auto"
+                >
+                  <span>Complete Profile</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ) : null}
           </div>
 
-          {/* Secondary Column (4 cols on desktop) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Secondary Column (4 cols on desktop, sticky & independently scrollable) */}
+          <div className="lg:col-span-4 min-w-0 space-y-6 pb-12 lg:pb-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
             {/* Pending Collaboration Requests */}
             <CollaborationRequests
               requests={incomingRequests}
@@ -515,14 +537,18 @@ export const DashboardPage: React.FC = () => {
                           {req.requester?.full_name || 'Builder'} (@{req.requester?.username})
                         </Link>
                         <span className="rounded-md bg-brand-ice px-2 py-0.5 text-xs font-semibold text-brand-royal">
-                          {req.request_type === 'general' || !req.idea
-                            ? 'Direct Collaboration'
-                            : `Role: ${req.role?.role_title || 'General Collaborator'}`}
+                          {req.request_type === 'role_invite'
+                            ? `Role Invitation: ${req.role?.role_title || 'Collaborator'}`
+                            : req.request_type === 'general' || !req.idea
+                              ? 'Direct Collaboration'
+                              : `Role: ${req.role?.role_title || 'General Collaborator'}`}
                         </span>
                       </div>
                       {req.idea ? (
                         <p className="mt-0.5 text-xs text-typography-slate">
-                          Applied to idea:{' '}
+                          {req.request_type === 'role_invite'
+                            ? 'Invited you to join idea: '
+                            : 'Applied to idea: '}
                           <Link
                             to={`/ideas/${req.idea.slug}`}
                             className="font-medium text-brand-royal hover:underline"

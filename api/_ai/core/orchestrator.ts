@@ -11,6 +11,8 @@ import { assertCallerAuthorizedForAgent } from './permissions';
 import { enforceUsageLimits, getCallerUsageSummary, recordUsageEvent } from './usage-manager';
 import {
   executeAgentTools,
+  executeFindMatchingBuildersTool,
+  executeFindMatchingProjectsTool,
   executeNavigationTool,
   executeUserWorkspaceContextTool,
   getAgentToolDefinitions,
@@ -192,6 +194,32 @@ export async function orchestrateAiChat(input: OrchestrateChatInput) {
             });
           }
           return cachedWorkspaceContext;
+        }
+
+        if (toolName === 'find_matching_builders_for_idea') {
+          return executeFindMatchingBuildersTool({
+            runId,
+            caller: input.caller,
+            agent,
+            ideaId:
+              typeof args.ideaId === 'string' ? args.ideaId : effectiveIdeaId || undefined,
+            roleQuery: typeof args.roleQuery === 'string' ? args.roleQuery : undefined,
+            skills: Array.isArray(args.skills)
+              ? args.skills.filter((s): s is string => typeof s === 'string')
+              : undefined,
+          });
+        }
+
+        if (toolName === 'find_matching_projects_for_user') {
+          return executeFindMatchingProjectsTool({
+            runId,
+            caller: input.caller,
+            agent,
+            skills: Array.isArray(args.skills)
+              ? args.skills.filter((s): s is string => typeof s === 'string')
+              : undefined,
+            category: typeof args.category === 'string' ? args.category : undefined,
+          });
         }
 
         return { error: `Tool "${toolName}" is not available.` };

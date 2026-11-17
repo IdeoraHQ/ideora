@@ -37,6 +37,15 @@ export const IDEORA_NAVIGATION_REGISTRY: readonly IdeoraRouteDefinition[] = [
     keywords: ['explore', 'discover', 'browse ideas', 'search ideas', 'find ideas', 'feed'],
   },
   {
+    id: 'match',
+    label: 'Ideora Match',
+    path: '/match',
+    description: 'Find matching builders for your open roles or discover projects looking for your skills.',
+    requiresAuth: false,
+    requiredRole: 'any',
+    keywords: ['match', 'ideora match', 'find builder', 'recommend builders', 'matching projects', 'invite to role'],
+  },
+  {
     id: 'people',
     label: 'People & Builders',
     path: '/people',
