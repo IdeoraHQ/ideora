@@ -80,7 +80,7 @@ const categoryOptions = [
 export const IdeaDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { profile, isAuthenticated } = useAuth();
+  const { profile, isAuthenticated, loading: authLoading } = useAuth();
 
   // Primary Data State
   const [idea, setIdea] = useState<Idea | null>(null);
@@ -117,7 +117,12 @@ export const IdeaDetailPage: React.FC = () => {
   const [postingComment, setPostingComment] = useState(false);
 
   const loadIdeaData = useCallback(async () => {
-    if (!slug) return;
+    if (authLoading) return;
+    if (!isAuthenticated || !slug) {
+      setIdea(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data } = await fetchIdeaBySlug(slug);
     if (!data) {
@@ -143,7 +148,7 @@ export const IdeaDetailPage: React.FC = () => {
     if (commentsRes.data) setComments(commentsRes.data);
     if (requestsRes.data) setRequests(requestsRes.data);
     setLoading(false);
-  }, [slug]);
+  }, [slug, authLoading, isAuthenticated]);
 
   useEffect(() => {
     void loadIdeaData();
@@ -427,13 +432,58 @@ export const IdeaDetailPage: React.FC = () => {
   };
 
   // 1. Loading State
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-24 text-center">
         <Sparkles className="mx-auto h-8 w-8 text-brand-royal animate-spin mb-3" />
         <p className="text-sm font-medium text-typography-slate">
           Loading project workspace...
         </p>
+      </div>
+    );
+  }
+
+  // 1b. Authentication Gate for Idea Workspace
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-24 text-center">
+        <SeoHead
+          title="Sign In to View Idea Workspace | Ideora"
+          description="Sign in to view the full idea workspace, open roles, and collaboration discussions on Ideora."
+          canonicalPath={`/ideas/${slug || ''}`}
+          noindex
+        />
+        <div className="rounded-3xl border border-surface-border bg-surface-white p-10 shadow-2xs space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-ice text-brand-royal">
+            <Shield className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-light text-typography-navy font-heading tracking-tight">
+            Sign In to View Idea Workspace
+          </h1>
+          <p className="text-sm text-typography-slate font-normal leading-relaxed">
+            Anyone can browse ideas on Explore. Sign in or create a free builder account to view full project workspaces, open roles, and discussions.
+          </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                navigate('/auth', {
+                  state: { from: `/ideas/${slug || ''}` },
+                })
+              }
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-royal px-5 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-brand-deep transition-all"
+            >
+              <span>Sign In or Sign Up</span>
+            </button>
+            <Link
+              to="/explore"
+              className="inline-flex items-center gap-2 rounded-xl border border-surface-border bg-surface-soft px-4 py-2.5 text-xs sm:text-sm font-medium text-typography-navy hover:border-brand-pale transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Explore Ideas</span>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
