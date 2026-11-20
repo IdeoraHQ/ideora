@@ -209,6 +209,34 @@ export async function sendAiChatMessage(params: {
   }
 }
 
+export interface SuggestedIdeaRole {
+  role_title: string;
+  category: 'frontend' | 'backend' | 'fullstack' | 'design' | 'product' | 'ai' | 'marketing';
+  spots_available: number;
+  description: string;
+}
+
+export async function suggestIdeaRoles(params: {
+  title: string;
+  summary: string;
+  description: string;
+  category: string;
+  collaborationType: string;
+}): Promise<{ data: SuggestedIdeaRole[] | null; error: Error | null }> {
+  try {
+    const data = await aiRequest<{ roles: SuggestedIdeaRole[] }>(
+      '/api/ai/suggest-roles',
+      {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }
+    );
+    return { data: data.roles || [], error: null };
+  } catch (err) {
+    return { data: null, error: err as Error };
+  }
+}
+
 export async function fetchAdminAiAnalyticsSnapshot(): Promise<{
   data: AdminAiAnalyticsSnapshot | null;
   error: Error | null;

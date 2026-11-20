@@ -35,6 +35,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { SeoHead } from '@/components/seo/SeoHead';
 import { CustomSelect } from '@/components/common';
+import { sanitizeExternalUrl } from '@/utils/url';
 import { supabase } from '@/services/supabase/client';
 import {
   fetchIdeaBySlug,
@@ -1545,33 +1546,33 @@ export const IdeaDetailPage: React.FC = () => {
 
                   {/* Links & View Profile */}
                   <div className="flex items-center gap-3 border-t border-surface-border/70 pt-3">
-                    {idea.author.github_url && (
+                    {sanitizeExternalUrl(idea.author.github_url) && (
                       <a
-                        href={idea.author.github_url}
+                        href={sanitizeExternalUrl(idea.author.github_url)!}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-typography-slate hover:text-brand-royal transition-colors"
                         title="GitHub Profile"
                       >
                         <Github className="h-4 w-4" />
                       </a>
                     )}
-                    {idea.author.linkedin_url && (
+                    {sanitizeExternalUrl(idea.author.linkedin_url) && (
                       <a
-                        href={idea.author.linkedin_url}
+                        href={sanitizeExternalUrl(idea.author.linkedin_url)!}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-typography-slate hover:text-brand-royal transition-colors"
                         title="LinkedIn Profile"
                       >
                         <Linkedin className="h-4 w-4" />
                       </a>
                     )}
-                    {idea.author.website_url && (
+                    {sanitizeExternalUrl(idea.author.website_url) && (
                       <a
-                        href={idea.author.website_url}
+                        href={sanitizeExternalUrl(idea.author.website_url)!}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-typography-slate hover:text-brand-royal transition-colors"
                         title="Portfolio Website"
                       >

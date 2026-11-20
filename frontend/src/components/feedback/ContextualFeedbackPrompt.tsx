@@ -69,6 +69,7 @@ export const ContextualFeedbackPrompt: React.FC = () => {
   const lastIdeaSlugRecordedRef = useRef<string | null>(null);
   const dismissedInMemoryRef = useRef(false);
   const graceElapsedRef = useRef(false);
+  const consecutiveHeartbeatFailuresRef = useRef(0);
 
   // Evaluate whether to open the dialog without interrupting active workflows
   const evaluatePrompt = useCallback(
@@ -98,6 +99,7 @@ export const ContextualFeedbackPrompt: React.FC = () => {
       lastIdeaSlugRecordedRef.current = null;
       dismissedInMemoryRef.current = false;
       graceElapsedRef.current = false;
+      consecutiveHeartbeatFailuresRef.current = 0;
       setPromptState(null);
       setIsOpen(false);
       return;
@@ -132,19 +134,42 @@ export const ContextualFeedbackPrompt: React.FC = () => {
     });
   }, [loading, isAuthenticated, profile?.id, evaluatePrompt]);
 
-  // Record active browsing heartbeat every 30s while visible
+  // Record active browsing heartbeat every 60s while visible and still needed
+  const heartbeatDone = Boolean(
+    promptState &&
+      (promptState.prompt_status === 'submitted' ||
+        promptState.prompt_status === 'declined' ||
+        Boolean(promptState.submitted_at) ||
+        promptState.active_seconds >= ACTIVE_SECONDS_THRESHOLD ||
+        promptState.session_count >= SESSION_THRESHOLD ||
+        (promptState.deferred_until &&
+          new Date(promptState.deferred_until).getTime() > Date.now()))
+  );
+
   useEffect(() => {
-    if (loading || !isAuthenticated || !profile?.id) return;
+    if (loading || !isAuthenticated || !profile?.id || heartbeatDone) return;
 
     const interval = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
-      void recordFeedbackEngagement('heartbeat', 30).then((state) => {
-        if (state) evaluatePrompt(state);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+      if (dismissedInMemoryRef.current) return;
+      if (consecutiveHeartbeatFailuresRef.current >= 2) {
+        window.clearInterval(interval);
+        return;
+      }
+
+      void recordFeedbackEngagement('heartbeat', 60).then((state) => {
+        if (state) {
+          consecutiveHeartbeatFailuresRef.current = 0;
+          evaluatePrompt(state);
+        } else {
+          consecutiveHeartbeatFailuresRef.current += 1;
+        }
       });
-    }, 30000);
+    }, 60000);
 
     return () => window.clearInterval(interval);
-  }, [loading, isAuthenticated, profile?.id, evaluatePrompt]);
+  }, [loading, isAuthenticated, profile?.id, heartbeatDone, evaluatePrompt]);
 
   // Record viewing an idea detail page as a meaningful exploration action
   useEffect(() => {

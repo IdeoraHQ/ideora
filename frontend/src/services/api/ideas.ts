@@ -1,5 +1,6 @@
 import { supabase } from '@/services/supabase/client';
 import { recordFeedbackEngagement } from '@/services/api/feedback';
+import { sanitizePostgrestSearch } from '@/utils/url';
 import type {
   Database,
   CreateIdeaPayload,
@@ -80,9 +81,12 @@ export async function fetchPublishedIdeas(
     }
 
     if (filter.search) {
-      query = query.or(
-        `title.ilike.%${filter.search}%,summary.ilike.%${filter.search}%`
-      );
+      const safeSearch = sanitizePostgrestSearch(filter.search);
+      if (safeSearch) {
+        query = query.or(
+          `title.ilike.%${safeSearch}%,summary.ilike.%${safeSearch}%`
+        );
+      }
     }
 
     const { data, error } = await query;

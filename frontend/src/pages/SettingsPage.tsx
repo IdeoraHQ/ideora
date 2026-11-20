@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/common';
+import { sanitizeExternalUrl } from '@/utils/url';
 import { supabase } from '@/services/supabase/client';
 import {
   updateCurrentProfile,
@@ -235,9 +236,9 @@ export const SettingsPage: React.FC = () => {
       bio: bio.trim() || null,
       skills,
       is_discoverable: isDiscoverable,
-      github_url: githubUrl.trim() || null,
-      linkedin_url: linkedinUrl.trim() || null,
-      website_url: websiteUrl.trim() || null,
+      github_url: sanitizeExternalUrl(githubUrl),
+      linkedin_url: sanitizeExternalUrl(linkedinUrl),
+      website_url: sanitizeExternalUrl(websiteUrl),
       ...(profile.role !== 'admin' ? { role: roleFocus as UserRole } : {}),
     });
     setSavingProfile(false);

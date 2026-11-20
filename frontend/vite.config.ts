@@ -19,7 +19,7 @@ function localAiApiDevPlugin(): Plugin {
 
         const parsedUrl = new URL(urlStr, 'http://localhost:5173');
         const routeName = parsedUrl.pathname.replace(/^\/api\/ai\//, '').replace(/\/+$/, '');
-        if (!['chat', 'conversations', 'usage'].includes(routeName)) {
+        if (!['chat', 'conversations', 'usage', 'suggest-roles'].includes(routeName)) {
           return next();
         }
 

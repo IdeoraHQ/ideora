@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { createIdea } from '@/services/api';
+import { createIdea, suggestIdeaRoles } from '@/services/api';
 import { SeoHead } from '@/components/seo/SeoHead';
 import { CustomSelect } from '@/components/common';
 import type { CollaborationType, IdeaStatus, SkillCategory } from '@/types';
@@ -97,6 +97,55 @@ export const CreateIdeaPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [suggestingRoles, setSuggestingRoles] = useState(false);
+  const [roleAiMessage, setRoleAiMessage] = useState<string | null>(null);
+
+  const handleSuggestRoles = async () => {
+    setRoleAiMessage(null);
+    if (!title.trim() && !summary.trim() && !description.trim()) {
+      setRoleAiMessage(
+        'Enter an idea title or summary above first so ORA can suggest tailored roles.'
+      );
+      return;
+    }
+
+    setSuggestingRoles(true);
+    const { data, error: aiErr } = await suggestIdeaRoles({
+      title: title.trim(),
+      summary: summary.trim(),
+      description: description.trim(),
+      category,
+      collaborationType,
+    });
+    setSuggestingRoles(false);
+
+    if (aiErr || !data || data.length === 0) {
+      setRoleAiMessage(
+        aiErr?.message || 'Unable to generate role suggestions right now.'
+      );
+      return;
+    }
+
+    setRoles((prev) => {
+      const isOnlyDefaultRow =
+        prev.length === 1 &&
+        prev[0].role_title === 'Fullstack Engineer' &&
+        !prev[0].description.trim();
+
+      if (isOnlyDefaultRow) {
+        return data;
+      }
+
+      const existingTitles = new Set(
+        prev.map((r) => r.role_title.trim().toLowerCase())
+      );
+      const uniqueNew = data.filter(
+        (r) => !existingTitles.has(r.role_title.trim().toLowerCase())
+      );
+      return uniqueNew.length > 0 ? [...prev, ...uniqueNew] : data;
+    });
+    setRoleAiMessage(`Added ${data.length} role suggestions from ORA — review or edit below.`);
+  };
 
   if (!isAuthenticated) {
     return (
@@ -425,7 +474,7 @@ export const CreateIdeaPage: React.FC = () => {
 
           {/* Dynamic Roles Needed Builder */}
           <div className="border-t border-surface-border pt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-light text-typography-navy flex items-center gap-2">
                   <Users className="h-5 w-5 text-brand-royal" />
@@ -435,15 +484,33 @@ export const CreateIdeaPage: React.FC = () => {
                   Specify the collaborators and skill sets you are actively recruiting.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={addRoleRow}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-brand-royal/30 bg-brand-ice px-3 py-1.5 text-xs font-semibold text-brand-royal hover:bg-brand-pale/60 transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Role
-              </button>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void handleSuggestRoles()}
+                  disabled={suggestingRoles}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-brand-royal/30 bg-surface-white px-3 py-1.5 text-xs font-semibold text-brand-royal hover:bg-brand-ice/60 transition-colors disabled:opacity-60"
+                >
+                  <Sparkles className={`h-3.5 w-3.5 ${suggestingRoles ? 'animate-pulse' : ''}`} />
+                  <span>{suggestingRoles ? 'Suggesting...' : 'Suggest Roles with AI'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={addRoleRow}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-brand-royal/30 bg-brand-ice px-3 py-1.5 text-xs font-semibold text-brand-royal hover:bg-brand-pale/60 transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Role
+                </button>
+              </div>
             </div>
+
+            {roleAiMessage && (
+              <div className="mb-4 rounded-xl border border-brand-pale bg-brand-ice/50 px-3.5 py-2 text-xs text-typography-navy flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-brand-royal shrink-0" />
+                <span>{roleAiMessage}</span>
+              </div>
+            )}
 
             <div className="space-y-4">
               {roles.map((role, index) => (

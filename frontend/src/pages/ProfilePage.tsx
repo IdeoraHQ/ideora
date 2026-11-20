@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SeoHead } from '@/components/seo/SeoHead';
+import { sanitizeExternalUrl } from '@/utils/url';
 import {
   fetchProfile,
   updateCurrentProfile,
@@ -285,9 +286,9 @@ export const ProfilePage: React.FC = () => {
       preferred_roles: preferredRoles,
       looking_to_contribute: lookingToContribute.trim() || null,
       collaboration_goals: collaborationGoals.trim() || null,
-      github_url: githubUrl.trim() || null,
-      linkedin_url: linkedinUrl.trim() || null,
-      website_url: websiteUrl.trim() || null,
+      github_url: sanitizeExternalUrl(githubUrl),
+      linkedin_url: sanitizeExternalUrl(linkedinUrl),
+      website_url: sanitizeExternalUrl(websiteUrl),
     });
 
     setSaving(false);
@@ -745,11 +746,11 @@ export const ProfilePage: React.FC = () => {
               </span>
 
               <div className="space-y-2">
-                {viewedProfile.github_url ? (
+                {sanitizeExternalUrl(viewedProfile.github_url) ? (
                   <a
-                    href={viewedProfile.github_url}
+                    href={sanitizeExternalUrl(viewedProfile.github_url)!}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-xl bg-surface-white border border-surface-border px-3 py-2 text-xs font-medium text-typography-navy hover:text-brand-royal hover:border-brand-pale transition-colors group"
                   >
                     <span className="flex items-center gap-2">
@@ -765,11 +766,11 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 )}
 
-                {viewedProfile.linkedin_url && (
+                {sanitizeExternalUrl(viewedProfile.linkedin_url) && (
                   <a
-                    href={viewedProfile.linkedin_url}
+                    href={sanitizeExternalUrl(viewedProfile.linkedin_url)!}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-xl bg-surface-white border border-surface-border px-3 py-2 text-xs font-medium text-typography-navy hover:text-brand-royal hover:border-brand-pale transition-colors group"
                   >
                     <span className="flex items-center gap-2">
@@ -780,11 +781,11 @@ export const ProfilePage: React.FC = () => {
                   </a>
                 )}
 
-                {viewedProfile.website_url && (
+                {sanitizeExternalUrl(viewedProfile.website_url) && (
                   <a
-                    href={viewedProfile.website_url}
+                    href={sanitizeExternalUrl(viewedProfile.website_url)!}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-xl bg-surface-white border border-surface-border px-3 py-2 text-xs font-medium text-typography-navy hover:text-brand-royal hover:border-brand-pale transition-colors group"
                   >
                     <span className="flex items-center gap-2">

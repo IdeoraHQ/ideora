@@ -1,4 +1,5 @@
 import { supabase } from '@/services/supabase/client';
+import { sanitizePostgrestSearch } from '@/utils/url';
 import type {
   AccountStatus,
   AdminAuditLog,
@@ -340,7 +341,7 @@ export async function fetchAdminUsers(filters?: {
       query = query.eq('role', filters.role);
     }
 
-    const search = filters?.search?.trim();
+    const search = sanitizePostgrestSearch(filters?.search);
     if (search) {
       query = query.or(
         `username.ilike.%${search}%,full_name.ilike.%${search}%`
@@ -442,7 +443,7 @@ export async function fetchAdminIdeas(filters?: {
       query = query.eq('moderation_status', filters.moderationStatus);
     }
 
-    const search = filters?.search?.trim();
+    const search = sanitizePostgrestSearch(filters?.search);
     if (search) {
       query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%`);
     }
